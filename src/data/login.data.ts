@@ -1,0 +1,16 @@
+export const loginData = {
+    validEmail: process.env.USER_NAME!,
+    validPassword: process.env.PASS_WORD!,
+    validPhone: process.env.PHONE_NUMBER!,
+    emptyEmail: '',
+    emptyPassword: '',
+    passwordLessThan6Chars: '12345',
+    invalidEmailOrPassword: '[EMAIL_ADDRESS]',
+    invalidEmail: 'nguyenhongmdmedia20@gmail.com',
+    invalidPhone: '12345678901',
+    invalidEmailWithSpace: 'nguyenhongmdmedia 19@gmail.com',
+    trimEmail: '          ',
+    trimPassword: '      ',
+    loginFailMessage: 'Hmmmm, Thông tin đăng nhập không chính xác.',
+    loginSuccessMessage: 'Đăng nhập thành công.',
+}

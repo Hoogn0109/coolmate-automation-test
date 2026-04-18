@@ -1,0 +1,9 @@
+node_modules
+playwright-report
+test-results
+allure-results
+allure-report
+allure-history
+dist
+.features-gen
+auth_state_*.json
