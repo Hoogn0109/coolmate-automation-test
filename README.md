@@ -1,0 +1,1 @@
+# coolmate-automation-test
