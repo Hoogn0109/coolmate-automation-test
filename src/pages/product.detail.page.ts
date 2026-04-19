@@ -302,8 +302,6 @@ export class ProductDetailPage {
 
         expect(salePriceText).toBeTruthy();
         expect(originalPriceText).toBeTruthy();
-
-        // Parse prices: "269.000đ" → 269000
         const parsePrice = (text: string): number => {
             return parseInt(text.replace(/[^\d]/g, ''), 10);
         };
@@ -446,10 +444,6 @@ export class ProductDetailPage {
         await this.verifyOutOfStockSizeAppearance();
     }
 
-    // ==========================================
-    // SIZE GUIDE (AT_PDP_GAL_014)
-    // ==========================================
-
     async clickSizeGuideLink(): Promise<void> {
         const link = this.page.locator(productDetailPageLocator.sizeGuideLink).first();
         await link.waitFor({ state: 'visible', timeout: 5_000 });
@@ -465,13 +459,11 @@ export class ProductDetailPage {
     }
 
     async closeSizeGuideModal(): Promise<void> {
-        // Try clicking outside first
         await this.page.mouse.click(10, 10);
         await this.page.waitForTimeout(500);
         const modal = this.page.locator(productDetailPageLocator.sizeGuideModal).first();
         const stillOpen = await modal.isVisible().catch(() => false);
         if (stillOpen) {
-            // Try close button
             const closeBtn = this.page.locator(productDetailPageLocator.sizeGuideCloseBtn).first();
             await closeBtn.click();
         }
@@ -488,10 +480,6 @@ export class ProductDetailPage {
         await this.closeSizeGuideModal();
         await this.expectSizeGuideModalClosed();
     }
-
-    // ==========================================
-    // QUANTITY STEPPER (AT_PDP_GAL_015)
-    // ==========================================
 
     async getQuantityValue(): Promise<number> {
         const input = this.page.locator(productDetailPageLocator.quantityInput).first();
@@ -511,7 +499,6 @@ export class ProductDetailPage {
     async setQuantityDirectly(value: number): Promise<void> {
         const input = this.page.locator(productDetailPageLocator.quantityInput).first();
         await input.fill(String(value));
-        // Use Escape to commit without navigating, then verify via plus button click
         await input.press('Escape');
         await this.page.waitForTimeout(200);
     }
@@ -520,41 +507,30 @@ export class ProductDetailPage {
         const input = this.page.locator(productDetailPageLocator.quantityInput).first();
         await input.waitFor({ state: 'visible', timeout: 5_000 });
 
-        // Scroll the quantity input into view (it's below the fold on most viewports)
         await input.scrollIntoViewIfNeeded({ timeout: 5_000 });
         await this.page.waitForTimeout(300);
 
         const initial = await this.getQuantityValue();
-
-        // 1. Click Plus → should increment
         await this.clickQuantityPlus();
         await expect.poll(() => this.getQuantityValue(), { timeout: 3_000 }).toBe(initial + 1);
 
-        // 2. Click Minus → should decrement back
         await this.clickQuantityMinus();
         await expect.poll(() => this.getQuantityValue(), { timeout: 3_000 }).toBe(initial);
 
-        // 3. Cannot go below 1 (when already at 1)
         if (initial === 1) {
             await this.clickQuantityMinus();
             await this.page.waitForTimeout(300);
             expect(await this.getQuantityValue()).toBeGreaterThanOrEqual(1);
         }
 
-        // 4. Set value directly via input fill (use clicks instead of Tab to avoid navigation)
         await input.click({ clickCount: 3 });
         await input.fill('3');
         await input.dispatchEvent('change');
         await this.page.waitForTimeout(300);
-        // Verify via plus/minus button still works
         await this.clickQuantityPlus();
         const afterPlus = await this.getQuantityValue();
         expect(afterPlus).toBeGreaterThan(1);
     }
-
-    // ==========================================
-    // ADD TO CART (AT_PDP_GAL_016)
-    // ==========================================
 
     async getCartItemCount(): Promise<number> {
         try {
@@ -571,25 +547,24 @@ export class ProductDetailPage {
         const btns = this.page.locator(productDetailPageLocator.sizeButtons);
         const count = await btns.count();
         if (count > 0) {
-            // Find the first size button that isn't disabled/opacity-muted
             for (let i = 0; i < count; i++) {
                 const btn = btns.nth(i);
                 const isOutOfStock = await btn.evaluate((el) => {
                     const cls = el.className;
                     return (el as HTMLButtonElement).disabled || cls.includes('opacity') || cls.includes('not-allowed');
                 }).catch(() => false);
-                
+
                 if (!isOutOfStock) {
                     const isActive = await btn.evaluate((el) => {
                         const cls = el.className;
                         return cls.includes('neutral-900') || cls.includes('text-white') || cls.includes('selected');
                     }).catch(() => false);
-                    
+
                     if (!isActive) {
-                        await btn.click({ force: true }).catch(() => {});
-                        await this.page.waitForTimeout(500); // Give UI time to update
+                        await btn.click({ force: true }).catch(() => { });
+                        await this.page.waitForTimeout(500);
                     }
-                    return; // Break out once we've ensured a size is selected
+                    return;
                 }
             }
         }
@@ -601,57 +576,44 @@ export class ProductDetailPage {
     }
 
     async expectAddToCartSuccessToast(): Promise<void> {
-        // Wait for the success popup that says "Thêm vào giỏ hàng thành công"
         const toast = this.page.locator(productDetailPageLocator.addToCartToast).first();
         await expect(toast).toBeVisible({ timeout: 8_000 });
     }
 
     async dismissAddToCartToast(): Promise<void> {
         const toastText = this.page.locator(productDetailPageLocator.addToCartToast).first();
-        
+
         if (await toastText.isVisible().catch(() => false)) {
-            // First attempt: explicitly click the close button
             const closeBtn = this.page.locator(productDetailPageLocator.addToCartToastCloseBtn).first();
             if (await closeBtn.isVisible().catch(() => false)) {
-                await closeBtn.click({ force: true, timeout: 2000 }).catch(() => {});
+                await closeBtn.click({ force: true, timeout: 2000 }).catch(() => { });
             } else {
-                // Second attempt: Escape key
                 await this.page.keyboard.press('Escape');
                 await this.page.waitForTimeout(500);
             }
         }
-        
-        // Wait for toast to disappear
-        await expect(toastText).not.toBeVisible({ timeout: 5_000 }).catch(() => {});
+
+        await expect(toastText).not.toBeVisible({ timeout: 5_000 }).catch(() => { });
     }
 
     async verifyAddToCart(): Promise<void> {
-        // Scroll the add-to-cart button into view before interacting
         await this.addCartButton.scrollIntoViewIfNeeded({ timeout: 5_000 });
         await this.selectSizeIfNeeded();
 
-        // [Data] Read cart count BEFORE adding
         const cartBefore = await this.getCartItemCount();
 
         await this.clickAddToCart();
-
-        // [Visual] Success toast "Thêm vào giỏ hàng thành công" must appear
         await this.expectAddToCartSuccessToast();
-
-        // Click X to dismiss the toast — cart count updates after dismissal
         await this.dismissAddToCartToast();
         await this.page.waitForTimeout(500);
 
-        // [Data] Cart count should now reflect the added item
         const cartAfter = await this.getCartItemCount();
         if (cartBefore > 0 || cartAfter > 0) {
             expect(cartAfter, 'Cart item count should increase after adding item').toBeGreaterThan(cartBefore);
         }
-        // If both are 0, the badge locator doesn't match but the toast confirmed success ✓
     }
 
     async verifyAddToCartRequiresSize(): Promise<void> {
-        // Without selecting a size, the button should produce a warning
         const cartBefore = await this.getCartItemCount();
         await this.clickAddToCart();
         await this.page.waitForTimeout(1500);
@@ -660,10 +622,6 @@ export class ProductDetailPage {
         const warningShown = await warning.isVisible().catch(() => false);
         expect(warningShown || cartAfter === cartBefore, 'A warning should appear or cart count should not change if size is not selected').toBeTruthy();
     }
-
-    // ==========================================
-    // DESCRIPTION (AT_PDP_GAL_017)
-    // ==========================================
 
     async scrollToDescription(): Promise<void> {
         const section = this.page.locator(productDetailPageLocator.descriptionSection).first();
@@ -681,14 +639,12 @@ export class ProductDetailPage {
     async expandDescriptionIfCollapsed(): Promise<void> {
         const expandBtn = this.page.locator(productDetailPageLocator.descriptionExpandBtn).first();
         const isVisible = await expandBtn.isVisible().catch(() => false);
-        if (!isVisible) return; // Already fully expanded or no button exists
-        
-        // Simply verify the button is clickable and click works
+        if (!isVisible) return;
+
         await expandBtn.scrollIntoViewIfNeeded();
         await expect(expandBtn).toBeEnabled({ timeout: 3_000 });
         await expandBtn.click();
         await this.page.waitForTimeout(500);
-        // After click the button text may change ("Xem thêm" ↔ "Thu gọn") – just verify section still visible
         const section = this.page.locator(productDetailPageLocator.descriptionSection).first();
         await expect(section).toBeVisible({ timeout: 3_000 });
     }
@@ -699,12 +655,7 @@ export class ProductDetailPage {
         await this.expandDescriptionIfCollapsed();
     }
 
-    // ==========================================
-    // POLICY (AT_PDP_GAL_018)
-    // ==========================================
-
     async verifyPolicyItemsVisible(): Promise<void> {
-        // Scroll to the add-to-cart button area first (policies are below it)
         const cartBtn = this.page.locator(productDetailPageLocator.addCartButton).first();
         await cartBtn.scrollIntoViewIfNeeded({ timeout: 5_000 });
         await this.page.waitForTimeout(300);
@@ -734,10 +685,6 @@ export class ProductDetailPage {
         await this.verifyPolicyContent();
     }
 
-    // ==========================================
-    // RELATED PRODUCTS (AT_PDP_GAL_019)
-    // ==========================================
-
     async scrollToRelatedProducts(): Promise<void> {
         const title = this.page.locator(productDetailPageLocator.relatedSectionTitle).first();
         await title.scrollIntoViewIfNeeded({ timeout: 10_000 });
@@ -759,7 +706,6 @@ export class ProductDetailPage {
         const href = await firstCard.getAttribute('href');
         await firstCard.click();
         await this.page.waitForURL(/coolmate\.me\/product\//i, { timeout: 10_000 });
-        // Wait for the new product's title (any h1) to be visible, instead of the old product's title
         await this.page.locator(productDetailPageLocator.anyProductTitle).first().waitFor({ state: 'visible', timeout: 10_000 });
     }
 
@@ -769,38 +715,28 @@ export class ProductDetailPage {
         await this.clickRelatedProductAndVerifyNavigation();
     }
 
-    // ==========================================
-    // REVIEWS (AT_PDP_REV)
-    // ==========================================
-
     async searchReview(keyword: string): Promise<void> {
         const searchInput = this.page.locator(productDetailPageLocator.reviewSearchInput).first();
         await searchInput.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await expect(searchInput).toBeVisible({ timeout: 10_000 });
-        
-        // Wait for API response after search
-        const responsePromise = this.page.waitForResponse(response => 
+
+        const responsePromise = this.page.waitForResponse(response =>
             response.url().includes('proxy/reviews/filter') && response.request().method() === 'GET'
-        , { timeout: 10_000 }).catch(() => null);
+            , { timeout: 10_000 }).catch(() => null);
 
         await searchInput.fill(keyword);
         await searchInput.press('Enter');
-        
+
         const response = await responsePromise;
         expect(response, 'API proxy/reviews/filter must return a response').toBeTruthy();
         if (response) {
             const status = response.status();
             expect(status, 'API must return 200 OK').toBe(200);
             const data = await response.json().catch(() => ({}));
-            // Verify data has result
             expect(data.data, 'API should return review data array').toBeTruthy();
         }
 
-        // Wait to render
         await this.page.waitForTimeout(2000);
-
-        // Visual: Verify Highlight (Coolmate often uses <mark> or bold style for hits)
-        // Check if keyword is present in ANY review item's text if highlight tags don't exist
         const items = this.page.locator(productDetailPageLocator.reviewItems);
         const firstItem = items.first();
         if (await firstItem.isVisible()) {
@@ -812,28 +748,26 @@ export class ProductDetailPage {
     async filterReview(): Promise<void> {
         const filter5Star = this.page.locator(productDetailPageLocator.reviewFilter5Star).first();
         const filterHasMedia = this.page.locator(productDetailPageLocator.reviewFilterHasMedia).first();
-        
+
         await filter5Star.scrollIntoViewIfNeeded({ timeout: 5000 });
-        
-        // Step 1: Filter by 5 Star
-        const requestPromise1 = this.page.waitForResponse(response => 
+
+        const requestPromise1 = this.page.waitForResponse(response =>
             response.url().includes('proxy/reviews/filter') && response.url().includes('star=5')
-        , { timeout: 10_000 }).catch(() => null);
-        
+            , { timeout: 10_000 }).catch(() => null);
+
         await filter5Star.click({ force: true });
         const resp1 = await requestPromise1;
         expect(resp1, 'API response must be received for star=5 filter').toBeTruthy();
         await this.page.waitForTimeout(2000);
 
-        // Step 2: Filter by Has Media (Coolmate uses has_picture_attached=true)
-        const requestPromise2 = this.page.waitForResponse(response => 
+        const requestPromise2 = this.page.waitForResponse(response =>
             response.url().includes('proxy/reviews/filter') && response.url().includes('has_picture_attached=true')
-        , { timeout: 15_000 }).catch(() => null);
+            , { timeout: 15_000 }).catch(() => null);
 
         await filterHasMedia.click({ force: true });
         const resp2 = await requestPromise2;
         expect(resp2, 'API response must be received for has_picture_attached=true filter').toBeTruthy();
-        
+
         await this.page.waitForTimeout(1500);
     }
 
@@ -842,50 +776,37 @@ export class ProductDetailPage {
         await sortDropdown.scrollIntoViewIfNeeded({ timeout: 5000 });
         await sortDropdown.click({ force: true });
         await this.page.waitForTimeout(1000);
-        
+
         const ascOption = this.page.locator(productDetailPageLocator.reviewSortAscendingOption).first();
         await ascOption.waitFor({ state: 'visible', timeout: 5000 });
-        
-        // INTERCEPT sorting API response to verify logic properly
-        const responsePromise = this.page.waitForResponse(response => 
+
+        const responsePromise = this.page.waitForResponse(response =>
             response.url().includes('proxy/reviews/filter') && response.url().includes('star_order_by=asc')
-        , { timeout: 10_000 });
+            , { timeout: 10_000 });
 
         await ascOption.click({ force: true });
-        
+
         const response = await responsePromise;
         expect(response, 'API must return sorted reviews').toBeTruthy();
-        
+
         const data = await response.json();
         const reviews = data.data || [];
-        
+
         if (reviews.length > 1) {
             for (let i = 0; i < reviews.length - 1; i++) {
-                expect(reviews[i].score, `Review ${i} score ${reviews[i].score} should be <= Review ${i+1} score ${reviews[i+1].score}`).toBeLessThanOrEqual(reviews[i + 1].score);
+                expect(reviews[i].score, `Review ${i} score ${reviews[i].score} should be <= Review ${i + 1} score ${reviews[i + 1].score}`).toBeLessThanOrEqual(reviews[i + 1].score);
             }
         }
     }
 
-    // ==========================================
-    // AT_PDP_REV_004 – Phân trang & Scroll Behavior
-    // ==========================================
-
-    /**
-     * Cuộn xuống cuối phần review, click nút trang "2",
-     * Verify: Visual (số "2" được khoanh xám), Logic (viewport không nhảy lên đầu),
-     * Data (list review thay đổi data mới qua API).
-     */
     async verifyReviewPagination(): Promise<void> {
-        // 1) Scroll đến phần review section
         const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await this.page.waitForTimeout(1000);
 
-        // 2) Đợi items đầu tiên render (để đảm khả năng lazy-load đã chạy)
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
         const page2Btn = this.page.locator(productDetailPageLocator.reviewPage2Button);
 
-        // 3) Cuộn dần xuống cho đến khi thấy nút trang 2 (thay vì cuộn mù 2500px)
         let isBtnVisible = await page2Btn.isVisible();
         let scrollAttempts = 0;
         while (!isBtnVisible && scrollAttempts < 10) {
@@ -895,38 +816,30 @@ export class ProductDetailPage {
             scrollAttempts++;
         }
 
-        // 4) Đảm bảo nút Trang 2 nằm giữa màn hình để không bị "trôi" mất
         await page2Btn.scrollIntoViewIfNeeded({ timeout: 5000 });
         await this.page.evaluate((el) => {
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, await page2Btn.elementHandle());
         await this.page.waitForTimeout(1000);
 
-        // 5) Đọc nội dung review trang 1 TRƯỚC khi click trang 2
         await expect(reviewItems.first()).toBeVisible({ timeout: 15_000 });
         const firstReviewTextBefore = await reviewItems.first().textContent().catch(() => '');
 
-        // 6) Set up API intercept TRƯỚC khi click
         const responsePromise = this.page.waitForResponse(
             response => response.url().includes('proxy/reviews/filter') && response.status() === 200,
             { timeout: 15_000 }
         );
 
-        // 7) Click page 2
         await page2Btn.click({ force: true });
 
-        // 8) Wait for API response
         const response = await responsePromise;
         expect(response, 'API proxy/reviews/filter must return a response').toBeTruthy();
         await this.page.waitForTimeout(2000);
 
-        // 9) Đọc review content trên trang 2
         const firstReviewTextAfter = await reviewItems.first().textContent().catch(() => '');
 
-        // 10) [Logic] So sánh content để chắc rằng trang đã thay đổi
         expect(firstReviewTextAfter, 'Dữ liệu trang 2 phải khác biệt so với trang 1').not.toBe(firstReviewTextBefore);
-        
-        // 11) [Visual] Nút trang 2 phải ở trạng thái active (highlighted)
+
         const isPage2Active = await page2Btn.evaluate((el) => {
             const cls = el.className;
             return cls.includes('bg-neutral') || cls.includes('bg-primary') || cls.includes('font-bold') || cls.includes('font-semibold');
@@ -941,44 +854,35 @@ export class ProductDetailPage {
         await searchInput.fill(keyword);
         await searchInput.press('Enter');
 
-        // [Logic] API should return empty results
-        const responsePromise = this.page.waitForResponse(response => 
+        const responsePromise = this.page.waitForResponse(response =>
             response.url().includes('proxy/reviews/filter') && response.url().includes(encodeURIComponent(keyword))
-        , { timeout: 15_000 });
-        
+            , { timeout: 15_000 });
+
         const response = await responsePromise;
         const body = await response.json();
-        
-        // Cấu trúc mới là response.data.list
+
         const reviewList = body.data?.list || [];
         expect(reviewList.length, 'API response cho từ khóa vô nghĩa phải trả về 0 kết quả').toBe(0);
 
-        // [Visual] Chờ UI cập nhật (Review list biến mất)
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
-        await this.page.waitForTimeout(2000); // Đợi render
+        await this.page.waitForTimeout(2000);
         const count = await reviewItems.count();
         expect(count, 'Không được hiển thị review nào khi search vô nghĩa').toBe(0);
 
-        // [Visual] Kiểm tra text "Hiển thị đánh giá 1 - 0"
         const countText = await this.page.locator(productDetailPageLocator.reviewCountText).first().textContent().catch(() => '');
         expect(countText, 'Text hiển thị đánh giá phải báo về 0').toMatch(/đánh giá.*0/i);
     }
 
-    // ==========================================
-    // AT_PDP_REV_006 – Buyer Information
-    // ==========================================
-
     async verifyReviewBuyerInfo(): Promise<void> {
         const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
-        
-        // Wait for lazy load
+
         await this.page.waitForTimeout(3000);
 
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
-        await expect.poll(() => reviewItems.count(), { 
-            timeout: 10_000, 
-            message: 'Phải có ít nhất 1 review để test thông số người mua' 
+        await expect.poll(() => reviewItems.count(), {
+            timeout: 10_000,
+            message: 'Phải có ít nhất 1 review để test thông số người mua'
         }).toBeGreaterThan(0);
 
         const count = await reviewItems.count();
@@ -993,13 +897,13 @@ export class ProductDetailPage {
 
             if (await sizeEl.isVisible().catch(() => false)) {
                 const text = await sizeEl.textContent();
-                expect(text, 'Kích thước phải có giá trị').toContain(':'); 
+                expect(text, 'Kích thước phải có giá trị').toContain(':');
                 foundSize = true;
             }
 
             if (await colorEl.isVisible().catch(() => false)) {
                 const text = await colorEl.textContent();
-                expect(text, 'Màu sắc phải có giá trị').toContain(':'); 
+                expect(text, 'Màu sắc phải có giá trị').toContain(':');
                 foundColor = true;
             }
 
@@ -1010,24 +914,13 @@ export class ProductDetailPage {
         expect(foundColor, 'Ít nhất 1 review phải hiển thị nhãn Màu sắc').toBeTruthy();
     }
 
-    // ==========================================
-    // AT_PDP_REV_007 – Tương tác với Media (Image Preview)
-    // ==========================================
-
-    /**
-     * Click vào một ảnh trong Review Images,
-     * Verify: Visual (Modal Preview mở lên), Logic (src ảnh hợp lệ, không broken).
-     */
     async verifyReviewImagePreview(): Promise<void> {
         const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await this.page.waitForTimeout(2000);
-
-        // First, filter to show reviews with images if needed
         const imageLinks = this.page.locator(productDetailPageLocator.reviewImageLink);
         let imageCount = await imageLinks.count();
 
-        // If no images visible yet, filter by "Có hình ảnh"
         if (imageCount === 0) {
             const filterHasMedia = this.page.locator(productDetailPageLocator.reviewFilterHasMedia).first();
             if (await filterHasMedia.isVisible().catch(() => false)) {
@@ -1040,11 +933,9 @@ export class ProductDetailPage {
 
         expect(imageCount, 'Phải có ít nhất 1 ảnh trong review để test Image Preview').toBeGreaterThan(0);
 
-        // [Logic] Verify the src attribute of the image is valid (not broken)
         const firstImageLink = imageLinks.first();
         await firstImageLink.scrollIntoViewIfNeeded({ timeout: 5000 });
 
-        // Get the inner img src
         const imgEl = firstImageLink.locator('img').first();
         if (await imgEl.isVisible().catch(() => false)) {
             const src = await imgEl.getAttribute('src');
@@ -1052,60 +943,45 @@ export class ProductDetailPage {
             expect(src, 'src của ảnh review phải là URL hợp lệ (http/https)').toMatch(/^https?:\/\//);
         }
 
-        // [Visual] Click to open lightbox
         await firstImageLink.click({ force: true });
         await this.page.waitForTimeout(1000);
 
-        // Verify lightbox (pswp) is opened
         const lightbox = this.page.locator(productDetailPageLocator.reviewLightbox).first();
         await expect(lightbox).toHaveClass(/pswp--open/, { timeout: 8_000 });
 
-        // [Interaction] Close lightbox
         await this.page.keyboard.press('Escape');
         await this.page.waitForTimeout(500);
     }
 
-    // ==========================================
-    // AT_PDP_REV_008 – Nhãn đánh giá nhanh (Review Tags)
-    // ==========================================
-
-    /**
-     * AT_PDP_REV_008 – Kiểm tra Nhãn đánh giá nhanh (Review Tags).
-     * Verify: Các nhãn như "Sản phẩm đẹp", "Giao hàng nhanh" hiển thị dạng pill (bo góc).
-     */
     async verifyReviewTags(): Promise<void> {
         const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
-        
-        // Cuộn dần xuống để trigger lazy-load
+
         for (let i = 0; i < 3; i++) {
             await this.page.evaluate(() => window.scrollBy(0, 500));
             await this.page.waitForTimeout(800);
         }
 
-        // Chờ items render
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
         await expect(reviewItems.first()).toBeVisible({ timeout: 15_000 });
 
         const tagLabels = ["Đóng gói đẹp", "Sản phẩm đẹp", "Giá tốt", "Giao hàng nhanh", "Chăm sóc khách hàng tận tình"];
         let foundTag = false;
-        
+
         for (const label of tagLabels) {
             const specificTag = reviewSection.locator(productDetailPageLocator.reviewTagByText(label)).first();
             try {
                 await specificTag.waitFor({ state: 'attached', timeout: 3000 });
-                
-                // Get the class of the element and its parents
+
                 const clsInfo = await specificTag.evaluate(el => {
                     return el.className + ' ' + (el.parentElement?.className || '') + ' ' + (el.parentElement?.parentElement?.className || '');
                 });
-                
+
                 if (/rounded/i.test(clsInfo)) {
                     foundTag = true;
-                    break; // Tìm thấy 1 tag là đủ chứng minh logic
+                    break;
                 }
             } catch (e) {
-                // Ignore, try next label
             }
         }
 

@@ -39,7 +39,7 @@ export const productDetailPageLocator = {
     // Rating & Review Locators
     ratingContainer: 'xpath=//h1/following-sibling::div//div[contains(@class, "gap-0.5") and .//img[contains(@alt, "-star")]]',
     ratingStars: 'xpath=//h1/following-sibling::div//div[contains(@class, "gap-0.5") and .//img[contains(@alt, "-star")]]//img',
-    
+
     // Price Locators
     salePrice: 'xpath=(//h1/following-sibling::div//span[contains(text(), "đ") and contains(@class, "text-2xl")] | //h1/following-sibling::div//p[contains(text(), "đ") and contains(@class, "text-[28px]")])[1]',
     originalPrice: 'xpath=(//h1/following-sibling::div//del | //h1/following-sibling::div//*[@class[contains(., "line-through")]])[1]',
@@ -90,9 +90,7 @@ export const productDetailPageLocator = {
     relatedSectionTitle: 'xpath=(//h2 | //h3 | //h4 | //p | //span | //strong | //div[not(*)])[contains(translate(normalize-space(.), "ABCDEFGHIJKLMNOPQRSTUVWXYZỢÍÊÂĂĐ", "abcdefghijklmnopqrstuvwxyzợiêâăđ"), "gợi ý xem thêm") or contains(translate(normalize-space(.), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "sản phẩm liên quan")]',
     relatedProductCards: 'xpath=(//h2 | //h3 | //h4 | //p | //span | //strong | //div[not(*)])[contains(translate(normalize-space(.), "ABCDEFGHIJKLMNOPQRSTUVWXYZỢÍÊÂĂĐ", "abcdefghijklmnopqrstuvwxyzợiêâăđ"), "gợi ý xem thêm") or contains(translate(normalize-space(.), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "sản phẩm liên quan")]/following::a[@href and .//img[contains(@alt,"")]]',
 
-    // ==========================================
     // REVIEWS SECTION
-    // ==========================================
     reviewSearchInput: 'input[placeholder="Tìm kiếm đánh giá"]',
     reviewFilter5Star: 'label:has-text("5")',
     reviewFilterHasMedia: 'label:has-text("Có hình ảnh")',
@@ -102,9 +100,7 @@ export const productDetailPageLocator = {
     reviewItemRatingStars: 'div.flex.gap-1 img', // Images representing stars
     reviewHighlightText: 'mark, .highlight, b',
 
-    // ==========================================
     // REVIEW PAGINATION
-    // ==========================================
     // Container cuối danh sách review
     reviewPaginationContainer: 'xpath=//*[@id="product-reviews"]//div[contains(@class,"flex") and contains(@class,"items-center") and contains(@class,"justify-center") and .//button[@aria-label]]',
     // Nút bấm số trang cụ thể — user approved (//button[normalize-space()='2'])[1]
@@ -114,17 +110,13 @@ export const productDetailPageLocator = {
     // Nút trang hiện tại (active – nền đậm)
     reviewActivePageButton: 'xpath=//*[@id="product-reviews"]//button[starts-with(@aria-label, "Trang ") and contains(@class,"bg-neutral-200")]',
 
-    // ==========================================
     // REVIEW EMPTY STATE
-    // ==========================================
     // Text "Hiển thị đánh giá 1-0" hoặc "đánh giá 0"
     reviewCountText: 'xpath=//*[@id="product-reviews"]//*[starts-with(normalize-space(text()),"Hiển thị đánh giá")]',
     // Vùng list review (empty khi không có kết quả)
     reviewListContainer: '#product-reviews .divide-y, #product-reviews [class*="review-list"]',
 
-    // ==========================================
     // REVIEW USER INFO
-    // ==========================================
     // Mỗi review item — dùng cùng selector đã hoạt động ở reviewItems (không ép ID #product-reviews)
     reviewItem: 'article[role="listitem"][aria-label="Product review item"]',
     // Kích thước trong review item (tag-neutral to handle span/p)
@@ -136,9 +128,7 @@ export const productDetailPageLocator = {
     // Cân nặng trong review item
     reviewItemWeight: 'xpath=.//*[contains(text(),"Cân nặng") or contains(text(),"cân nặng")]',
 
-    // ==========================================
     // REVIEW IMAGES (Image Preview)
-    // ==========================================
     // Ảnh thumbnail trong bất kỳ review item nào
     reviewImageThumbnails: 'xpath=//*[@id="product-reviews"]//a[@data-pswp-width]//img',
     // Link bao quanh ảnh (trigger pswp)
@@ -150,19 +140,17 @@ export const productDetailPageLocator = {
     // Ảnh bên trong lightbox
     reviewLightboxImage: '.pswp__img',
 
-    // ==========================================
     // REVIEW TAGS (Nhãn đánh giá nhanh)
-    // ==========================================
     // Tags dạng pill/badge (rounded-full) bên trong review
     reviewTags: '#product-reviews .rounded-full, #product-reviews .rounded-3xl',
     // Tags trong một review item cụ thể (dùng relative locator từ item)
     reviewItemTags: '.rounded-full, .rounded-3xl',
-    
+
     // Generic & Section containers
     reviewSection: '#product-reviews',
     anyProductTitle: 'h1',
     cartWarningToast: '[class*="warning"], [class*="error"], [role="alert"], [class*="toast"]',
-    
+
     // Dynamic Review Tag selector
     reviewTagByText: (label: string) => `text="${label}"`,
 };
