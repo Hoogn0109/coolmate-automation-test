@@ -10,10 +10,8 @@ export const CHECKOUT_LOCATOR = {
   quantityIncreaseBtn: '//button[@aria-label="Tăng số lượng"]',
   quantityDecreaseBtn: '//button[@aria-label="Giảm số lượng"]',
 
-  // Remove single product
+  // Remove 
   removeProductBtn: '//button[normalize-space()="Xóa" or @aria-label="Xóa"]',
-
-  // Remove ALL products at once
   removeAllBtn: '//button[normalize-space()="Xóa tất cả"]',
 
   // Size / Color combobox in cart item
