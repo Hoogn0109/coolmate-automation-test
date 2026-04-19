@@ -6,7 +6,7 @@ export const CART_LOCATOR = {
   addToCartBtn: '#product-detail-add-cart',
 
   // Header / Cart Icon
-  cartBadge: 'header a[href*="cart"] > span, header a[href*="cart"] span',
+  cartBadge: 'a[aria-label="Giỏ hàng"] span:not(:empty)',
 
   // Toast Popup (success notification top-right)
   successToast: 'text="Thêm vào giỏ hàng thành công"',

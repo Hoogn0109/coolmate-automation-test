@@ -32,7 +32,7 @@ export const loginPage = {
   //Notification
   txtSuccessLogin: "//p[normalize-space()='Đăng nhập thành công']",
   btnClose: "//button[.//span[normalize-space()='Close']]",
-  btnVerify: "//*[@id='radix-_R_1qb9mivb_']/div[2]/button[2]",
-  txtRegisterPopup: "//button[normalize-space()='Đăng ký tài khoản']",
+  btnVerify: "//button[normalize-space()='Xác nhận']",
+  txtRegisterPopup: "//h3[contains(text(),'Rất nhiều đặc quyền và quyền lợi mua sắm đang chờ bạn')]",
   txtForgotPasswordPopup: "//h3[normalize-space()='Cấp lại mật khẩu']",
 };

@@ -61,26 +61,36 @@ export class CartPage {
 
   async clickAddToCart() {
     await this.selectSizeIfNeeded();
-    let scrollAttempts = 0;
-    while (scrollAttempts < 3) {
-      try {
-
-        await this.addToCartBtn.evaluate((node: HTMLElement) => node.scrollIntoView({ block: 'center' }));
-        break;
-      } catch {
-        scrollAttempts++;
-        console.log(`[CartPage] Scroll attempt ${scrollAttempts} failed, retrying...`);
-        if (scrollAttempts < 3) {
-          await this.page.waitForTimeout(300);
-        } else {
-          console.log('[CartPage] Scroll failed after 3 attempts, continuing anyway');
-        }
-      }
-    }
-    await expect(this.addToCartBtn).toBeEnabled({ timeout: 15_000 }).catch(() => { });
-    await this.addToCartBtn.waitFor({ state: 'visible', timeout: 10_000 });
-    await this.addToCartBtn.evaluate((node: HTMLElement) => node.click());
     await this.page.waitForTimeout(500);
+
+    await this.addToCartBtn.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => { });
+    await expect(this.addToCartBtn).toBeEnabled({ timeout: 15_000 });
+    const captureAddToCartResponse = () =>
+      this.page.waitForResponse(
+        res => res.url().includes('cart') && res.request().method() === 'POST',
+        { timeout: 5000 }
+      );
+
+    try {
+      await Promise.all([
+        captureAddToCartResponse(),
+        this.addToCartBtn.click({ force: true })
+      ]);
+    } catch (e) {
+      await this.addToCartBtn.click({ force: true });
+      await captureAddToCartResponse().catch(() => { });
+    }
+
+    await this.page.waitForFunction(
+      (selector) => {
+        const btn = document.querySelector(selector);
+        if (!btn) return true;
+        return !btn.textContent?.includes('Đang thêm') && !(btn as HTMLButtonElement).disabled;
+      },
+      '#product-detail-add-cart',
+      { timeout: 10_000 }
+    ).catch(() => { });
+    await this.page.waitForTimeout(300);
   }
 
   async selectDifferentSize() {
@@ -99,6 +109,8 @@ export class CartPage {
 
   async selectSizeIfNeeded() {
     const btns = this.page.locator(CART_LOCATOR.sizeButtons);
+    await btns.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => { });
+
     const count = await btns.count();
     if (count > 0) {
       for (let i = 0; i < count; i++) {
@@ -107,8 +119,8 @@ export class CartPage {
         if (!isDisabled) {
           const cls = await btn.getAttribute('class') || '';
           if (!cls.includes('bg-neutral-900')) {
-            await btn.evaluate((node: HTMLElement) => node.click());
-            await this.page.waitForTimeout(300);
+            await btn.click({ force: true });
+            await this.page.waitForTimeout(500);
           }
           return;
         }
@@ -117,9 +129,7 @@ export class CartPage {
   }
 
   async expectSuccessToastVisible() {
-    await this.successToast.waitFor({ state: 'visible', timeout: 8_000 }).catch(() => {
-      console.log('[CartPage] Toast not detected within 8s — will verify via badge count');
-    });
+    await expect(this.successToast).toBeVisible({ timeout: 10_000 });
   }
 
   async dismissToast() {
@@ -185,9 +195,8 @@ export class CartPage {
 
   async getCartItemCount(): Promise<number> {
     try {
-      await this.page.waitForTimeout(200);
-
       const badgeLocator = this.page.locator('header a[href*="cart"] span');
+      await this.page.waitForTimeout(500);
 
       const count = await badgeLocator.count();
       if (count === 0) return 0;

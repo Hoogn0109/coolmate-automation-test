@@ -63,9 +63,7 @@ export class ProductDetailPage {
         await this.page.goto(process.env.PDP_URL_3 || '');
         await this.mainImage.waitFor({ state: 'visible', timeout: 10_000 });
         await this.dismissCoolClubPopup();
-        // Click the star rating under the title to scroll directly to the review section
         await this.clickRatingToScroll().catch(() => {
-            // Fallback if the rating container isn't clickable
             this.page.evaluate(() => window.scrollBy(0, 2000));
         });
         await this.page.waitForTimeout(1500);
@@ -138,7 +136,6 @@ export class ProductDetailPage {
         expect(lastImageSrc).not.toBe(firstImageSrc);
     }
 
-    // Verify Prev button navigation: navigate to image 2, then back to image 1
     async verifyPrevNavigationFromImage2To1(altText: string): Promise<void> {
         await this.clickThumbnail(altText, 2);
         const image2Locator = this.page.locator(productDetailPageLocator.mainImageByIndex(2));
@@ -387,10 +384,6 @@ export class ProductDetailPage {
         expect(detail.length).toBeGreaterThan(20);
     }
 
-    // ==========================================
-    // SIZE SELECTION (AT_PDP_GAL_013)
-    // ==========================================
-
     async getAvailableSizes(): Promise<string[]> {
         const btns = this.page.locator(productDetailPageLocator.sizeButtons);
         const count = await btns.count();
@@ -409,15 +402,12 @@ export class ProductDetailPage {
         await this.page.waitForTimeout(300);
         const isActive = await sizeBtn.evaluate((el) => {
             const cls = el.className;
-            // active sizes typically get a dark background or white text  
             return cls.includes('border-neutral-900') || cls.includes('bg-neutral-900')
                 || cls.includes('text-white') || cls.includes('selected')
                 || cls.includes('font-bold');
         });
-        // Log for debug if this fails
         if (!isActive) {
             const cls = await sizeBtn.getAttribute('class');
-            console.log(`Size "${sizeText}" class: ${cls}`);
         }
         expect(isActive, `Size "${sizeText}" should show active state after click`).toBeTruthy();
     }
@@ -838,13 +828,13 @@ export class ProductDetailPage {
 
         const firstReviewTextAfter = await reviewItems.first().textContent().catch(() => '');
 
-        expect(firstReviewTextAfter, 'Dữ liệu trang 2 phải khác biệt so với trang 1').not.toBe(firstReviewTextBefore);
+        expect(firstReviewTextAfter, 'The data on page 2 must be different from page 1').not.toBe(firstReviewTextBefore);
 
         const isPage2Active = await page2Btn.evaluate((el) => {
             const cls = el.className;
             return cls.includes('bg-neutral') || cls.includes('bg-primary') || cls.includes('font-bold') || cls.includes('font-semibold');
         });
-        expect(isPage2Active, 'Nút trang "2" phải được highlight/active').toBeTruthy();
+        expect(isPage2Active, 'Verify that the page ‘2’ button is highlighted (active).').toBeTruthy();
     }
 
     async verifyReviewEmptyState(): Promise<void> {
@@ -862,15 +852,15 @@ export class ProductDetailPage {
         const body = await response.json();
 
         const reviewList = body.data?.list || [];
-        expect(reviewList.length, 'API response cho từ khóa vô nghĩa phải trả về 0 kết quả').toBe(0);
+        expect(reviewList.length, 'Verify that the API returns zero results for an invalid or meaningless keyword').toBe(0);
 
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
         await this.page.waitForTimeout(2000);
         const count = await reviewItems.count();
-        expect(count, 'Không được hiển thị review nào khi search vô nghĩa').toBe(0);
+        expect(count, 'Don’t show any reviews for meaningless search keywords.').toBe(0);
 
         const countText = await this.page.locator(productDetailPageLocator.reviewCountText).first().textContent().catch(() => '');
-        expect(countText, 'Text hiển thị đánh giá phải báo về 0').toMatch(/đánh giá.*0/i);
+        expect(countText, 'The review count displayed must be 0.').toMatch(/đánh giá.*0/i);
     }
 
     async verifyReviewBuyerInfo(): Promise<void> {
@@ -882,7 +872,7 @@ export class ProductDetailPage {
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
         await expect.poll(() => reviewItems.count(), {
             timeout: 10_000,
-            message: 'Phải có ít nhất 1 review để test thông số người mua'
+            message: 'There must be at least one review to test buyer-related metrics.'
         }).toBeGreaterThan(0);
 
         const count = await reviewItems.count();
@@ -897,21 +887,21 @@ export class ProductDetailPage {
 
             if (await sizeEl.isVisible().catch(() => false)) {
                 const text = await sizeEl.textContent();
-                expect(text, 'Kích thước phải có giá trị').toContain(':');
+                expect(text, 'the size attribute is not empty').toContain(':');
                 foundSize = true;
             }
 
             if (await colorEl.isVisible().catch(() => false)) {
                 const text = await colorEl.textContent();
-                expect(text, 'Màu sắc phải có giá trị').toContain(':');
+                expect(text, 'the color attribute is not empty').toContain(':');
                 foundColor = true;
             }
 
             if (foundSize && foundColor) break;
         }
 
-        expect(foundSize, 'Ít nhất 1 review phải hiển thị nhãn Kích thước').toBeTruthy();
-        expect(foundColor, 'Ít nhất 1 review phải hiển thị nhãn Màu sắc').toBeTruthy();
+        expect(foundSize, 'At least one review must display the "Size" label').toBeTruthy();
+        expect(foundColor, 'At least one review must display the "Color" label').toBeTruthy();
     }
 
     async verifyReviewImagePreview(): Promise<void> {
@@ -931,7 +921,7 @@ export class ProductDetailPage {
             }
         }
 
-        expect(imageCount, 'Phải có ít nhất 1 ảnh trong review để test Image Preview').toBeGreaterThan(0);
+        expect(imageCount, 'At least one review must include an image for Image Preview validation').toBeGreaterThan(0);
 
         const firstImageLink = imageLinks.first();
         await firstImageLink.scrollIntoViewIfNeeded({ timeout: 5000 });
@@ -939,8 +929,8 @@ export class ProductDetailPage {
         const imgEl = firstImageLink.locator('img').first();
         if (await imgEl.isVisible().catch(() => false)) {
             const src = await imgEl.getAttribute('src');
-            expect(src, 'src của ảnh review phải tồn tại').toBeTruthy();
-            expect(src, 'src của ảnh review phải là URL hợp lệ (http/https)').toMatch(/^https?:\/\//);
+            expect(src, 'The image src must exist').toBeTruthy();
+            expect(src, 'The review image src must be a valid URL (http/https).').toMatch(/^https?:\/\//);
         }
 
         await firstImageLink.click({ force: true });
@@ -965,7 +955,7 @@ export class ProductDetailPage {
         const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
         await expect(reviewItems.first()).toBeVisible({ timeout: 15_000 });
 
-        const tagLabels = ["Đóng gói đẹp", "Sản phẩm đẹp", "Giá tốt", "Giao hàng nhanh", "Chăm sóc khách hàng tận tình"];
+        const tagLabels = ["Well-packaged, high-quality appearance, reasonable price, fast shipping, excellent customer service."];
         let foundTag = false;
 
         for (const label of tagLabels) {
@@ -985,7 +975,7 @@ export class ProductDetailPage {
             }
         }
 
-        expect(foundTag, 'Phải có ít nhất 1 nhãn đánh giá nhanh xuất hiện và được bo góc').toBeTruthy();
+        expect(foundTag, 'At least one quick review tag is visible and has rounded corners').toBeTruthy();
     }
 }
 
