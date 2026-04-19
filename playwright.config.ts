@@ -42,7 +42,7 @@ export default defineConfig({
       args: [],
     },
     browserName: 'chromium',
-    headless: !!process.env.CI || !!process.env.GITHUB_ACTIONS || false,
+    headless: true,
 
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
