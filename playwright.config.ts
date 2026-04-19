@@ -39,13 +39,10 @@ export default defineConfig({
     baseURL: `${process.env.BASE_URL}${process.env.PREFIX ?? ''}`,
     permissions: ['camera', 'microphone'],
     launchOptions: {
-      args: [
-        '--use-fake-ui-for-media-stream',
-        '--use-fake-device-for-media-stream',
-      ],
+      args: [],
     },
     browserName: 'chromium',
-    headless: false,
+    headless: !!process.env.CI || !!process.env.GITHUB_ACTIONS || false,
 
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
