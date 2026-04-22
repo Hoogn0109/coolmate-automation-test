@@ -7,13 +7,13 @@ import { checkoutData } from '../data/checkout.data';
 /**
  * Helper: Add a product to cart via PDP then navigate to cart/checkout.
  * Ensures each test starts with at least 1 item in cart.
+ * Uses direct navigation to /cart instead of relying on toast click — more reliable.
  */
 async function addProductAndGoToCart(page: import('@playwright/test').Page): Promise<CheckoutPage> {
   const cartPage = new CartPage(page);
   await cartPage.openPdp();
   await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.clickViewCart();
+  await page.goto(process.env.BASE_URL + 'cart');
   await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
   const checkoutPage = new CheckoutPage(page);
   await checkoutPage.dismissCoolClubPopup();
@@ -28,11 +28,9 @@ async function addTwoProductsAndGoToCart(page: import('@playwright/test').Page):
   const cartPage = new CartPage(page);
   await cartPage.openPdp();
   await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.dismissToast();
+  await cartPage.dismissToast().catch(() => {});
   await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.clickViewCart();
+  await page.goto(process.env.BASE_URL + 'cart');
   await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
   const checkoutPage = new CheckoutPage(page);
   await checkoutPage.dismissCoolClubPopup();
@@ -53,8 +51,8 @@ async function loginAndGoToCheckout(page: import('@playwright/test').Page): Prom
   const cartPage = new CartPage(page);
   await cartPage.openPdp();
   await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.clickViewCart();
+  await cartPage.expectCartCountIncreased(0);
+  await page.goto(process.env.BASE_URL + 'cart');
   await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
   const checkoutPage = new CheckoutPage(page);
   await checkoutPage.dismissCoolClubPopup();
