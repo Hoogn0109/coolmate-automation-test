@@ -5,13 +5,13 @@ export const CART_LOCATOR = {
   sizeOption: 'xpath=//*[@id="product-detail-variants"]//button[contains(@class,"bg-neutral-100")]',
   addToCartBtn: '#product-detail-add-cart',
 
-  // Header / Cart Icon
-  cartBadge: 'a[aria-label="Giỏ hàng"] span:not(:empty)',
+  // Badge count may be aria-hidden — use page.evaluate() in getCartItemCount() instead
+  cartBadge: 'a[href="/cart"], a[aria-label="Giỏ hàng"]',
 
   // Toast Popup (success notification top-right)
-  successToast: 'text="Thêm vào giỏ hàng thành công"',
-  toastCloseBtn: 'text="Thêm vào giỏ hàng thành công" >> xpath=ancestor::div[1]//button[not(contains(., "XEM GIỎ"))]',
-  viewCartBtn: 'xpath=(//img[@alt="cart"])[1]',
+  successToast: '[class*="fixed"][class*="top"] :text("Thêm vào giỏ hàng thành công"), [role="status"] :text("Thêm vào giỏ hàng thành công"), [data-sonner-toast] :text("Thêm vào giỏ hàng thành công")',
+  toastCloseBtn: '[class*="fixed"][class*="top"] button:not(:has-text("XEM GIỎ")), [data-sonner-toast] button:not(:has-text("XEM GIỎ"))',
+  viewCartBtn: 'a[href*="/cart"]:has(img[alt="cart"]), xpath=(//img[@alt="cart"])[1]',
 
   // Size Selection
   sizeButtons: 'xpath=//*[@id="product-detail-variants"]//button',
