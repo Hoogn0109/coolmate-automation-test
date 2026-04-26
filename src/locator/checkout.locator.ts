@@ -1,3 +1,5 @@
+import type { Locator, Page } from '@playwright/test';
+
 export const CHECKOUT_LOCATOR = {
   cartProductItem: '//button[@aria-label="Xóa" or normalize-space()="Xóa"]/ancestor::div[.//a[contains(@href,"/product/")]][1]',
   cartProductImage: '//img[@alt="cart-item"]',
@@ -54,6 +56,10 @@ export const CHECKOUT_LOCATOR = {
   // ADDRESS
   addressInput: '//input[@placeholder="Nhập địa chỉ" or @aria-label="Địa chỉ (trước sáp nhập)" or contains(@placeholder,"địa chỉ") or contains(@placeholder,"Địa chỉ")]',
   citySelect: '//select[contains(@name,"city") or contains(@name,"tinh") or contains(@name,"province")]',
+  shippingCityInput: '//input[@placeholder="Chọn tỉnh/thành phố" or @aria-label="Tỉnh/Thành phố" or contains(@placeholder,"tỉnh/thành phố") or contains(@placeholder,"Tỉnh/Thành phố")] | //*[@role="combobox" and (contains(normalize-space(.),"Chọn tỉnh/thành phố") or contains(normalize-space(.),"Tỉnh/Thành phố"))]',
+  shippingDistrictInput: '//input[@placeholder="Chọn quận/huyện" or @aria-label="Quận/Huyện" or contains(@placeholder,"quận/huyện") or contains(@placeholder,"Quận/Huyện")] | //*[@role="combobox" and (contains(normalize-space(.),"Chọn quận/huyện") or contains(normalize-space(.),"Quận/Huyện"))]',
+  shippingWardInput: '//input[@placeholder="Chọn phường/xã" or @aria-label="Phường/Xã" or contains(@placeholder,"phường/xã") or contains(@placeholder,"Phường/Xã")] | //*[@role="combobox" and (contains(normalize-space(.),"Chọn phường/xã") or contains(normalize-space(.),"Phường/Xã"))]',
+  shippingLocationError: '//p[contains(normalize-space(),"Tỉnh/Thành phố không được để trống") or contains(normalize-space(),"Quận/Huyện không được để trống") or contains(normalize-space(),"Phường/Xã không được để trống") or contains(normalize-space(),"tỉnh/thành phố không được để trống") or contains(normalize-space(),"quận/huyện không được để trống") or contains(normalize-space(),"phường/xã không được để trống")]',
   savedAddressList: '//*[contains(@class,"address-list") or contains(@class,"saved-address")]//div',
   saveAddressCheckbox: '//input[@type="checkbox" and (contains(@name,"save_address") or contains(@id,"save"))]',
 
@@ -128,6 +134,9 @@ export const CHECKOUT_LOCATOR = {
   coolclubPopupCloseBtn: 'div:has-text(/CoolClub|COOL CLUB|CoolCash/i) >> button',
 
   // Missing locators added during refactor:
+  visibleFilter: ':visible',
+  parentElement: '..',
+  nativeSelectOption: 'option',
   fullNameRoleName: 'Họ tên',
   phoneRoleName: 'Số điện thoại',
   emailRoleName: 'Email',
@@ -147,4 +156,27 @@ export const CHECKOUT_LOCATOR = {
   confirmRemoveBtnRoleName: /Xác nhận/i,
   paymentMethodRadioInput: (method: string) => `input[name="paymentMethod"][value*="${method}"]`,
   paymentMethodText: (method: string) => `text=${method}`,
+  textBoxByRole: (page: Page, name: string | RegExp): Locator => page.getByRole('textbox', { name }),
+  comboboxByRole: (page: Page, name: string | RegExp): Locator => page.getByRole('combobox', { name }),
+  textByText: (page: Page, text: string | RegExp): Locator => page.getByText(text),
+  confirmRemoveButton: (page: Page): Locator => page.getByRole('button', { name: CHECKOUT_LOCATOR.confirmRemoveBtnRoleName }),
+  dropdownOption: (page: Page, name: RegExp): Locator =>
+    page.getByRole('option', { name }).first().or(page.getByText(name).first()),
+  firstVisibleDropdownOptions: (page: Page): Locator[] => [
+    page.locator('//*[@role="option" and normalize-space() and not(contains(normalize-space(),"KhÃ´ng cÃ³ káº¿t quáº£"))]').first(),
+    page.locator('//*[@role="listbox"]//*[normalize-space() and not(contains(normalize-space(),"KhÃ´ng cÃ³ káº¿t quáº£")) and not(self::svg) and not(self::img)]').first(),
+  ],
+  selectedDropdownOption: (page: Page): Locator =>
+    page.locator('//*[@role="option" and @aria-selected="true"]').first(),
+  orderTotalAmountCandidates: (label: Locator): Locator[] => [
+    label.locator('xpath=following-sibling::*[contains(normalize-space(),"đ") or contains(normalize-space(),"₫") or contains(normalize-space(),"VND")][1]').first(),
+    label.locator('xpath=../*[contains(normalize-space(),"đ") or contains(normalize-space(),"₫") or contains(normalize-space(),"VND")][last()]').first(),
+    label.locator('xpath=../following-sibling::*[contains(normalize-space(),"đ") or contains(normalize-space(),"₫") or contains(normalize-space(),"VND")][1]').first(),
+    label.locator('xpath=ancestor::*[self::div or self::li][1]//*[contains(normalize-space(),"đ") or contains(normalize-space(),"₫") or contains(normalize-space(),"VND")][last()]').first(),
+  ],
+  paymentMethodOption: (page: Page, method: string): Locator =>
+    page
+      .locator(CHECKOUT_LOCATOR.paymentMethodRadioInput(method))
+      .or(page.locator(CHECKOUT_LOCATOR.paymentMethodText(method)))
+      .first(),
 };
