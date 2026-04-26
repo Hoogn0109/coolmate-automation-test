@@ -1,124 +1,30 @@
-import { defineConfig } from 'allure';
-import { env } from 'node:process';
+import { spawnSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { platform } from 'node:os';
 
-const charts = [
-    // Pie chart — tỉ lệ % passed/failed/broken hiện tại
-    {
-        type: 'currentStatus',
-        title: 'Test Statuses',
-        statuses: ['passed', 'failed', 'broken', 'skipped', 'unknown'],
-        metric: 'passed',
-    },
+const isWindows = platform() === 'win32';
+const playwrightArgs = process.argv.slice(2);
 
-    // Bar chart — kết quả theo severity
-    {
-        type: 'testResultSeverities',
-        title: 'Results by Severity',
-        levels: ['blocker', 'critical', 'normal', 'minor', 'trivial'],
-        statuses: ['passed', 'failed', 'broken', 'skipped', 'unknown'],
-        includeUnset: true,
-    },
+const run = (command, args) =>
+  spawnSync(command, args, {
+    stdio: 'inherit',
+    shell: isWindows,
+  });
 
-    // Trend chart — % defect qua các lần chạy (YÊU CẦU CHÍNH)
-    {
-        type: 'statusDynamics',
-        title: 'Defect Trend (Status Dynamics)',
-        statuses: ['passed', 'failed', 'broken', 'skipped', 'unknown'],
-        limit: 20,
-    },
+rmSync('allure-results', { recursive: true, force: true });
 
-    // Trend chart — test fixed vs regressed qua các lần chạy
-    {
-        type: 'statusTransitions',
-        title: 'Status Transitions (Fixed / Regressed)',
-        limit: 20,
-    },
+const testResult = run('npx', ['playwright', 'test', ...playwrightArgs]);
 
-    // Trend chart — test base tăng/giảm qua thời gian
-    {
-        type: 'testBaseGrowthDynamics',
-        title: 'Test Base Growth',
-        statuses: ['passed', 'failed', 'broken', 'skipped', 'unknown'],
-        limit: 20,
-    },
+mkdirSync('allure-results', { recursive: true });
+rmSync('allure-results/history', { recursive: true, force: true });
 
-    // Treemap — success rate theo feature
-    {
-        type: 'successRateDistribution',
-        title: 'Success Rate by Feature',
-    },
+if (existsSync('allure-report/history')) {
+  cpSync('allure-report/history', 'allure-results/history', { recursive: true });
+}
 
-    // Heatmap — lỗi theo environment
-    {
-        type: 'problemsDistribution',
-        title: 'Problems by Environment',
-        by: 'environment',
-    },
+const reportResult = run('npx', ['allure', 'generate', 'allure-results', '--clean', '-o', 'allure-report']);
 
-    // Stability — theo suite
-    {
-        type: 'stabilityDistribution',
-        title: 'Stability by Suite',
-        threshold: 80,
-        skipStatuses: ['skipped', 'unknown'],
-        groupBy: 'suite',
-    },
+const testStatus = testResult.status ?? 1;
+const reportStatus = reportResult.status ?? 1;
 
-    // Duration histogram
-    {
-        type: 'durations',
-        title: 'Test Durations',
-        groupBy: 'none',
-    },
-
-    // Duration trend qua các lần chạy
-    {
-        type: 'durationDynamics',
-        title: 'Duration Dynamics',
-        limit: 20,
-    },
-
-    // Status age pyramid — lỗi tồn tại bao lâu
-    {
-        type: 'statusAgePyramid',
-        title: 'Status Age Pyramid',
-        limit: 20,
-    },
-];
-
-export default defineConfig({
-    name: env.REPORT_NAME || 'DATN UNIQLO Automation Test Report',
-    output: './allure-report',
-
-    // History JSONL
-    historyPath: './allure-history/history.jsonl',
-    appendHistory: true,
-
-    // Metadata
-    variables: {
-        'Project': env.CI_PROJECT_NAME || 'DATN UNIQLO',
-        'Branch': env.CI_COMMIT_BRANCH || 'local',
-        'Build': env.CI_PIPELINE_IID || 'local-build',
-        'Environment': env.TEST_ENV || 'staging',
-        'Executed By': env.GITLAB_USER_NAME || 'local',
-    },
-
-    defaultLabels: {
-        severity: 'normal',
-        owner: 'qa-team',
-        layer: 'e2e',
-    },
-
-    plugins: {
-        awesome: {
-            options: {
-                reportName: env.REPORT_NAME || 'DATN UNIQLO Automation Test Report',
-                singleFile: false,
-                reportLanguage: 'en',
-                groupBy: ['parentSuite', 'suite', 'subSuite'],
-                open: false,
-                charts,
-            },
-        },
-    },
-});
+process.exit(reportStatus !== 0 ? reportStatus : testStatus);
