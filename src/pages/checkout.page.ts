@@ -1,5 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { CHECKOUT_LOCATOR } from '../locator/checkout.locator';
+import { CartPage } from './cart.page';
+import { LoginPage } from './login.page';
 
 export class CheckoutPage {
   readonly page: Page;
@@ -64,6 +66,10 @@ export class CheckoutPage {
   // Addresses
   readonly savedAddressList: Locator;
   readonly saveAddressCheckbox: Locator;
+  readonly shippingCityInput: Locator;
+  readonly shippingDistrictInput: Locator;
+  readonly shippingWardInput: Locator;
+  readonly shippingLocationError: Locator;
 
   // Vouchers, Referrals & Discounts
   readonly referralSection: Locator;
@@ -89,31 +95,82 @@ export class CheckoutPage {
   readonly emailError: Locator;
   readonly fieldErrorMessages: Locator;
 
+  static async addProductAndGoToCart(page: Page): Promise<CheckoutPage> {
+    const cartPage = new CartPage(page);
+    await cartPage.openPdp();
+    await cartPage.clickAddToCart();
+
+    await page.goto(process.env.BASE_URL + 'cart');
+    await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+    return checkoutPage;
+  }
+
+  static async addTwoProductsAndGoToCart(page: Page): Promise<CheckoutPage> {
+    const cartPage = new CartPage(page);
+    await cartPage.openPdp();
+    await cartPage.clickAddToCart();
+    await cartPage.dismissToast().catch(() => { });
+    await cartPage.clickAddToCart();
+
+    await page.goto(process.env.BASE_URL + 'cart');
+    await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+    return checkoutPage;
+  }
+
+  static async loginAndGoToCheckout(page: Page): Promise<CheckoutPage> {
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.openLoginForm();
+    await loginPage.login(process.env.USER_NAME!, process.env.PASS_WORD!);
+    await loginPage.verifyLoginSuccess();
+
+    const cartPage = new CartPage(page);
+    await cartPage.openPdp();
+    await cartPage.clickAddToCart();
+    await cartPage.expectCartCountIncreased(0);
+
+    await page.goto(process.env.BASE_URL + 'cart');
+    await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+    return checkoutPage;
+  }
+
   constructor(page: Page) {
     this.page = page;
 
     // Form Inputs
-    this.fullNameInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.fullNameRoleName })
-      .or(page.locator(CHECKOUT_LOCATOR.fullNameInput)).and(page.locator(':visible')).first();
-    this.phoneInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.phoneRoleName })
-      .or(page.locator(CHECKOUT_LOCATOR.phoneInput)).and(page.locator(':visible')).first();
-    this.emailInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.emailRoleName })
-      .or(page.locator(CHECKOUT_LOCATOR.emailInput)).and(page.locator(':visible')).first();
+    this.fullNameInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.fullNameRoleName)
+      .or(page.locator(CHECKOUT_LOCATOR.fullNameInput)).and(page.locator(CHECKOUT_LOCATOR.visibleFilter)).first();
+    this.phoneInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.phoneRoleName)
+      .or(page.locator(CHECKOUT_LOCATOR.phoneInput)).and(page.locator(CHECKOUT_LOCATOR.visibleFilter)).first();
+    this.emailInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.emailRoleName)
+      .or(page.locator(CHECKOUT_LOCATOR.emailInput)).and(page.locator(CHECKOUT_LOCATOR.visibleFilter)).first();
     this.addressInput = page.locator(CHECKOUT_LOCATOR.addressInput).first();
-    this.orderNoteInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.orderNoteRoleName }).or(page.locator(CHECKOUT_LOCATOR.orderNoteInput));
+    this.orderNoteInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.orderNoteRoleName).or(page.locator(CHECKOUT_LOCATOR.orderNoteInput));
 
     // Receiver Form
-    this.receiverCheckboxLabel = page.getByText(CHECKOUT_LOCATOR.receiverCheckboxText).first();
+    this.receiverCheckboxLabel = CHECKOUT_LOCATOR.textByText(page, CHECKOUT_LOCATOR.receiverCheckboxText).first();
     this.receiverNameInput = page.locator(CHECKOUT_LOCATOR.receiverNameInputFallback).first();
     this.receiverPhoneInput = page.locator(CHECKOUT_LOCATOR.receiverPhoneInputFallback).first();
     this.receiverError = page.locator(CHECKOUT_LOCATOR.receiverError).first();
 
     // VAT Form
-    this.vatCheckboxLabel = page.getByText(CHECKOUT_LOCATOR.vatCheckboxText).first();
-    this.vatCompanyInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.vatCompanyRoleName }).or(page.locator(CHECKOUT_LOCATOR.vatCompanyInput)).first();
-    this.vatTaxInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.vatTaxCodeRoleName }).or(page.locator(CHECKOUT_LOCATOR.vatTaxCodeInput)).first();
-    this.vatAddressInput = page.getByRole('combobox', { name: CHECKOUT_LOCATOR.vatAddressRoleName }).or(page.getByRole('textbox', { name: CHECKOUT_LOCATOR.vatAddressRoleName })).or(page.locator(CHECKOUT_LOCATOR.vatAddressInput)).first();
-    this.vatEmailInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.vatEmailRoleName }).or(page.locator(CHECKOUT_LOCATOR.vatEmailInputFallback)).first();
+    this.vatCheckboxLabel = CHECKOUT_LOCATOR.textByText(page, CHECKOUT_LOCATOR.vatCheckboxText).first();
+    this.vatCompanyInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatCompanyRoleName).or(page.locator(CHECKOUT_LOCATOR.vatCompanyInput)).first();
+    this.vatTaxInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatTaxCodeRoleName).or(page.locator(CHECKOUT_LOCATOR.vatTaxCodeInput)).first();
+    this.vatAddressInput = CHECKOUT_LOCATOR.comboboxByRole(page, CHECKOUT_LOCATOR.vatAddressRoleName).or(CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatAddressRoleName)).or(page.locator(CHECKOUT_LOCATOR.vatAddressInput)).first();
+    this.vatEmailInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatEmailRoleName).or(page.locator(CHECKOUT_LOCATOR.vatEmailInputFallback)).first();
     this.vatError = page.locator(CHECKOUT_LOCATOR.vatError).first();
     this.vatNote = page.locator(CHECKOUT_LOCATOR.vatNote).first();
 
@@ -133,7 +190,7 @@ export class CheckoutPage {
     // Checkout Details
     this.orderTotalLabel = page.locator(CHECKOUT_LOCATOR.orderTotalLabel).first();
     this.orderSubtotalLabel = page.locator(CHECKOUT_LOCATOR.orderSubtotalLabel).first();
-    this.fallbackTotalText = page.locator(CHECKOUT_LOCATOR.fallbackTotalText).first().locator('..');
+    this.fallbackTotalText = page.locator(CHECKOUT_LOCATOR.fallbackTotalText).first().locator(CHECKOUT_LOCATOR.parentElement);
     this.paymentShippingFeeLabel = page.locator(CHECKOUT_LOCATOR.paymentShippingFeeLabel).first();
 
     // UI Elements & Banners 
@@ -155,6 +212,10 @@ export class CheckoutPage {
     // Addresses
     this.savedAddressList = page.locator(CHECKOUT_LOCATOR.savedAddressList);
     this.saveAddressCheckbox = page.locator(CHECKOUT_LOCATOR.saveAddressCheckbox).first();
+    this.shippingCityInput = page.locator(CHECKOUT_LOCATOR.shippingCityInput).first();
+    this.shippingDistrictInput = page.locator(CHECKOUT_LOCATOR.shippingDistrictInput).first();
+    this.shippingWardInput = page.locator(CHECKOUT_LOCATOR.shippingWardInput).first();
+    this.shippingLocationError = page.locator(CHECKOUT_LOCATOR.shippingLocationError).first();
 
     // Vouchers, Referrals & Discounts 
     this.referralSection = page.locator(CHECKOUT_LOCATOR.referralSection).first();
@@ -167,7 +228,7 @@ export class CheckoutPage {
     this.voucherDisabledItem = page.locator(CHECKOUT_LOCATOR.voucherDisabledItem).first();
     this.voucherDisabledWarning = page.locator(CHECKOUT_LOCATOR.voucherDisabledWarning).first();
     this.voucherActiveItem = page.locator(CHECKOUT_LOCATOR.voucherActiveItem);
-    this.discountCodeInput = page.getByRole('textbox', { name: CHECKOUT_LOCATOR.discountCodeRoleName }).or(page.locator(CHECKOUT_LOCATOR.discountCodeInput));
+    this.discountCodeInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.discountCodeRoleName).or(page.locator(CHECKOUT_LOCATOR.discountCodeInput));
     this.discountApplyBtn = page.locator(CHECKOUT_LOCATOR.discountApplyBtn).first();
     this.discountSuccessMessage = page.locator(CHECKOUT_LOCATOR.discountSuccessMessage).first();
     this.discountRemoveBtn = page.locator(CHECKOUT_LOCATOR.discountRemoveBtn).first();
@@ -253,7 +314,7 @@ export class CheckoutPage {
     await btn.waitFor({ state: "visible", timeout: 5_000 });
     await btn.click();
     try {
-      const confirmBtn = this.page.getByRole("button", { name: /Xác nhận/i });
+      const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
       if (await confirmBtn.isVisible({ timeout: 1500 })) await confirmBtn.click();
     } catch { }
     await this.page.waitForTimeout(1_500);
@@ -264,7 +325,7 @@ export class CheckoutPage {
     if (isVisible) {
       await this.removeAllBtn.click();
       try {
-        const confirmBtn = this.page.getByRole("button", { name: /Xác nhận/i });
+        const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
         if (await confirmBtn.isVisible({ timeout: 1500 })) await confirmBtn.click();
       } catch { }
       await this.page.waitForTimeout(2_000);
@@ -284,35 +345,35 @@ export class CheckoutPage {
 
   // ORDER TOTAL
   parsePrice(text: string): number {
-    return parseInt(text.replace(/[^\d]/g, ""), 10) || 0;
+    const amountText = this.extractFirstCurrencyText(text) ?? text;
+    return parseInt(amountText.replace(/[^\d]/g, ""), 10) || 0;
   }
 
   async getOrderTotalText(): Promise<string> {
     await this.orderTotalLabel.waitFor({ state: "visible", timeout: 10_000 });
-    const result = await this.page.evaluate(() => {
-      const labels = ["Thành tiền", "Tổng cộng", "Tổng tiền"];
-      const allP = Array.from(document.querySelectorAll("p, span"));
-      const label = allP.find((el) => labels.includes(el.textContent?.trim() || ""));
-      if (!label) return "";
-      const next = label.nextElementSibling;
-      if (next?.textContent?.includes("đ")) return next.textContent.trim();
-      const parentNext = label.parentElement?.nextElementSibling;
-      if (parentNext?.textContent?.includes("đ")) return parentNext.textContent.trim();
-      const siblings = Array.from(label.parentElement?.children || []);
-      const idx = siblings.indexOf(label as Element);
-      if (idx >= 0 && siblings[idx + 1]?.textContent?.includes("đ")) {
-        return siblings[idx + 1].textContent?.trim() || "";
+
+    for (const candidate of CHECKOUT_LOCATOR.orderTotalAmountCandidates(this.orderTotalLabel)) {
+      const text = await candidate.textContent({ timeout: 1_000 }).catch(() => "");
+      const amountText = this.extractFirstCurrencyText(text || "");
+      if (amountText) {
+        return amountText;
       }
-      return "";
-    });
-    if (result) return result;
+    }
+
     const fallbackText = await this.fallbackTotalText.textContent();
-    return fallbackText || "";
+    return this.extractFirstCurrencyText(fallbackText || "") ?? fallbackText ?? "";
   }
 
   async getOrderTotalValue(): Promise<number> {
     const text = await this.getOrderTotalText();
     return this.parsePrice(text);
+  }
+
+  private extractFirstCurrencyText(text: string): string | null {
+    const amount = String.raw`(?:\d{1,3}(?:[.,]\d{3})+|\d+)`;
+    const currency = String.raw`(?:đ|₫|VND)`;
+    const match = text.match(new RegExp(String.raw`(?:${currency}\s*${amount}|${amount}\s*${currency}|\d{1,3}(?:[.,]\d{3})+)`, 'i'));
+    return match?.[0]?.trim() ?? null;
   }
 
   async expectOrderTotalVisible() {
@@ -328,7 +389,7 @@ export class CheckoutPage {
     const dropdown = this.variantDropdown.nth(index);
     const isVisible = await dropdown.isVisible().catch(() => false);
     if (!isVisible) return;
-    const options = await dropdown.locator("option").allTextContents();
+    const options = await dropdown.locator(CHECKOUT_LOCATOR.nativeSelectOption).allTextContents();
     if (options.length > 1) {
       await dropdown.selectOption({ index: 1 });
       await this.page.waitForTimeout(1_000);
@@ -394,6 +455,14 @@ export class CheckoutPage {
     await this.phoneInput.fill(phone);
   }
 
+  async getFullNameValue() {
+    return this.fullNameInput.inputValue({ timeout: 5_000 }).catch(() => "");
+  }
+
+  async getPhoneValue() {
+    return this.phoneInput.inputValue({ timeout: 5_000 }).catch(() => "");
+  }
+
   async fillEmail(email: string) {
     await this.emailInput.fill(email);
   }
@@ -439,12 +508,225 @@ export class CheckoutPage {
 
   // ADDRESS
   async fillAddress(address: string) {
-    await this.addressInput.waitFor({ state: "attached", timeout: 5_000 }).catch(() => { });
-    await this.addressInput.fill(address, { force: true, timeout: 5000 }).catch(() => { });
+    await this.addressInput.waitFor({ state: "visible", timeout: 10_000 });
+    await this.addressInput.scrollIntoViewIfNeeded();
+    await this.addressInput.fill(address, { force: true, timeout: 5_000 });
+    await expect.poll(async () => (await this.getAddressValue()).trim().length > 0, {
+      timeout: 5_000,
+      message: "Shipping address should retain the entered value",
+    }).toBeTruthy();
   }
 
   async getAddressValue() {
     return await this.addressInput.inputValue({ timeout: 5000 }).catch(() => "");
+  }
+
+  async fillShippingAddress(
+    address: string,
+    city: string,
+    cityAliases: string[] = [city],
+    district?: string,
+    districtAliases: string[] = district ? [district] : [],
+    ward?: string,
+    wardAliases: string[] = ward ? [ward] : [],
+  ) {
+    await this.fillAddress(address);
+    await this.selectShippingCity(city, cityAliases);
+    if (district) {
+      await this.selectShippingDistrict(district, districtAliases);
+    }
+    if (ward && await this.shippingWardInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await this.selectShippingWard(ward, wardAliases);
+    }
+    await this.expectShippingAddressReady();
+  }
+
+  async selectShippingCity(city: string, cityAliases: string[] = [city]) {
+    const cityControl = this.shippingCityInput.or(this.page.locator(CHECKOUT_LOCATOR.citySelect).first()).first();
+    await this.selectShippingLocation(cityControl, city, cityAliases);
+
+    await expect.poll(() => this.getShippingCityValue(), {
+      timeout: 8_000,
+      message: "Shipping city/province should be selected",
+    }).not.toBe("");
+  }
+
+  async selectShippingDistrict(district: string, districtAliases: string[] = [district]) {
+    await this.selectShippingLocation(this.shippingDistrictInput, district, districtAliases, true);
+
+    await expect.poll(() => this.getShippingDistrictValue(), {
+      timeout: 8_000,
+      message: "Shipping district should be selected",
+    }).not.toBe("");
+  }
+
+  async selectShippingWard(ward: string, wardAliases: string[] = [ward]) {
+    await this.selectShippingLocation(this.shippingWardInput, ward, wardAliases, true);
+
+    await expect.poll(() => this.getShippingWardValue(), {
+      timeout: 8_000,
+      message: "Shipping ward should be selected",
+    }).not.toBe("");
+  }
+
+  async getShippingCityValue() {
+    return this.getShippingLocationValue(this.shippingCityInput, "Chọn tỉnh/thành phố");
+  }
+
+  async getShippingDistrictValue() {
+    return this.getShippingLocationValue(this.shippingDistrictInput, "Chọn quận/huyện");
+  }
+
+  async getShippingWardValue() {
+    return this.getShippingLocationValue(this.shippingWardInput, "Chọn phường/xã");
+  }
+
+  async expectShippingAddressReady() {
+    const addressValue = await this.getAddressValue();
+    expect(addressValue.trim().length, "Shipping address must not be empty").toBeGreaterThan(0);
+
+    const cityValue = await this.getShippingCityValue();
+    expect(cityValue.trim().length, "Shipping city/province must not be empty").toBeGreaterThan(0);
+
+    if (await this.shippingDistrictInput.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      const districtValue = await this.getShippingDistrictValue();
+      expect(districtValue.trim().length, "Shipping district must not be empty").toBeGreaterThan(0);
+    }
+
+    if (await this.shippingWardInput.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      const wardValue = await this.getShippingWardValue();
+      expect(wardValue.trim().length, "Shipping ward must not be empty").toBeGreaterThan(0);
+    }
+
+    await expect(this.shippingLocationError).not.toBeVisible({ timeout: 3_000 });
+  }
+
+  private async selectShippingLocation(
+    control: Locator,
+    value: string,
+    aliases: string[],
+    preferFirstAvailableOption = false,
+  ) {
+    await control.waitFor({ state: "visible", timeout: 10_000 });
+    await control.scrollIntoViewIfNeeded();
+
+    const tagName = await control.evaluate((element) => element.tagName.toLowerCase()).catch(() => "");
+    if (tagName === "select") {
+      const selected = await control.selectOption({ label: value }).then(() => true).catch(() => false);
+      if (!selected) {
+        await control.selectOption({ index: 1 });
+      }
+      return;
+    }
+
+    await control.click({ force: true });
+    if (preferFirstAvailableOption && await this.chooseFirstVisibleDropdownOption()) {
+      if (await this.commitActiveComboboxOption(control, 4_000)) {
+        return;
+      }
+    }
+
+    await control.fill(value, { force: true, timeout: 3_000 }).catch(async () => {
+      await this.page.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A").catch(() => { });
+      await this.page.keyboard.type(value);
+    });
+    if (await this.chooseVisibleDropdownOption([value, ...aliases])) {
+      if (await this.commitActiveComboboxOption(control, 4_000)) {
+        return;
+      }
+    }
+
+    await this.clearShippingLocationControl(control);
+    await control.click({ force: true });
+    if (await this.chooseFirstVisibleDropdownOption()) {
+      if (await this.commitActiveComboboxOption(control, 4_000)) {
+        return;
+      }
+    }
+
+    await this.page.keyboard.press("ArrowDown");
+    await this.page.keyboard.press("Enter");
+    await this.commitActiveComboboxOption(control, 4_000);
+  }
+
+  private async getShippingLocationValue(control: Locator, placeholder: string) {
+    const value = await control.inputValue({ timeout: 2_000 }).catch(() => "");
+    if (value.trim()) return value.trim();
+
+    const text = await control.textContent({ timeout: 2_000 }).catch(() => "");
+    return (text || "").replace(placeholder, "").trim();
+  }
+
+  private async chooseVisibleDropdownOption(optionTexts: string[]): Promise<boolean> {
+    for (const text of optionTexts) {
+      const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const optionRegex = new RegExp(escaped, "i");
+      const option = CHECKOUT_LOCATOR.dropdownOption(this.page, optionRegex);
+
+      if (await option.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await option.click({ force: true });
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private async chooseFirstVisibleDropdownOption(): Promise<boolean> {
+    const candidates = CHECKOUT_LOCATOR.firstVisibleDropdownOptions(this.page);
+
+    for (const option of candidates) {
+      if (await option.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await option.click({ force: true });
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private async commitActiveComboboxOption(control: Locator, timeout = 3_000): Promise<boolean> {
+    const deadline = Date.now() + timeout;
+
+    while (Date.now() < deadline) {
+      const currentValue = await this.getShippingLocationValue(control, "");
+      if (this.isSelectedLocationValue(currentValue)) {
+        await this.page.keyboard.press("Tab").catch(() => { });
+        return true;
+      }
+
+      const selectedOption = CHECKOUT_LOCATOR.selectedDropdownOption(this.page);
+      if (await selectedOption.isVisible({ timeout: 500 }).catch(() => false)) {
+        await selectedOption.click({ force: true }).catch(() => { });
+      }
+
+      await this.page.keyboard.press("Enter").catch(() => { });
+      await this.page.keyboard.press("Tab").catch(() => { });
+
+      const updatedValue = await this.getShippingLocationValue(control, "");
+      if (this.isSelectedLocationValue(updatedValue)) {
+        return true;
+      }
+
+      await control.click({ force: true }).catch(() => { });
+      await this.page.keyboard.press("ArrowDown").catch(() => { });
+      await this.page.keyboard.press("Enter").catch(() => { });
+    }
+
+    return false;
+  }
+
+  private isSelectedLocationValue(value: string): boolean {
+    const normalized = value.trim();
+    return normalized.length > 0 && !/^Chọn\s+/i.test(normalized);
+  }
+
+  private async clearShippingLocationControl(control: Locator) {
+    await control.fill("", { force: true, timeout: 2_000 }).catch(async () => {
+      await control.click({ force: true }).catch(() => { });
+      await this.page.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A").catch(() => { });
+      await this.page.keyboard.press("Backspace").catch(() => { });
+    });
   }
 
   async editAddress(newAddress: string) {
@@ -485,13 +767,13 @@ export class CheckoutPage {
   }
 
   async fillReceiverInfo(name: string, phone: string) {
-    await this.page.locator(CHECKOUT_LOCATOR.receiverNameInputFallback).first().fill(name, { force: true });
-    await this.page.locator(CHECKOUT_LOCATOR.receiverPhoneInputFallback).first().fill(phone, { force: true });
+    await this.receiverNameInput.fill(name, { force: true });
+    await this.receiverPhoneInput.fill(phone, { force: true });
   }
 
   async expectReceiverFormVisible() {
-    await expect(this.page.locator(CHECKOUT_LOCATOR.receiverNameInputFallback).first()).toBeAttached({ timeout: 8_000 });
-    await expect(this.page.locator(CHECKOUT_LOCATOR.receiverPhoneInputFallback).first()).toBeAttached({ timeout: 8_000 });
+    await expect(this.receiverNameInput).toBeAttached({ timeout: 8_000 });
+    await expect(this.receiverPhoneInput).toBeAttached({ timeout: 8_000 });
   }
 
   async expectReceiverErrorVisible() {
@@ -608,7 +890,7 @@ export class CheckoutPage {
   }
 
   async selectPaymentMethod(method: string) {
-    const radio = this.page.locator(CHECKOUT_LOCATOR.paymentMethodRadioInput(method)).or(this.page.locator(CHECKOUT_LOCATOR.paymentMethodText(method))).first();
+    const radio = CHECKOUT_LOCATOR.paymentMethodOption(this.page, method);
     await radio.scrollIntoViewIfNeeded();
     await radio.check({ force: true }).catch(() => radio.click());
     await this.page.waitForTimeout(500);

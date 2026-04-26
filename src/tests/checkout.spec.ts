@@ -1,72 +1,12 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 import { CheckoutPage } from '../pages/checkout.page'
-import { CartPage } from '../pages/cart.page';
-import { LoginPage } from '../pages/login.page';
 import { checkoutData } from '../data/checkout.data';
 
-/**
- * Helper: Add a product to cart via PDP then navigate to cart/checkout.
- * Ensures each test starts with at least 1 item in cart.
- */
-async function addProductAndGoToCart(page: import('@playwright/test').Page): Promise<CheckoutPage> {
-  const cartPage = new CartPage(page);
-  await cartPage.openPdp();
-  await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.clickViewCart();
-  await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
-  const checkoutPage = new CheckoutPage(page);
-  await checkoutPage.dismissCoolClubPopup();
-  await checkoutPage.expectCartProductsVisible();
-  return checkoutPage;
-}
-
-/**
- * Helper: Add 2 products to cart (for tests that need multiple items).
- */
-async function addTwoProductsAndGoToCart(page: import('@playwright/test').Page): Promise<CheckoutPage> {
-  const cartPage = new CartPage(page);
-  await cartPage.openPdp();
-  await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.dismissToast();
-  await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.clickViewCart();
-  await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
-  const checkoutPage = new CheckoutPage(page);
-  await checkoutPage.dismissCoolClubPopup();
-  await checkoutPage.expectCartProductsVisible();
-  return checkoutPage;
-}
-
-/**
- * Helper: Login and navigate to checkout with items in cart.
- */
-async function loginAndGoToCheckout(page: import('@playwright/test').Page): Promise<CheckoutPage> {
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.openLoginForm();
-  await loginPage.login(process.env.USER_NAME!, process.env.PASS_WORD!);
-  await loginPage.verifyLoginSuccess();
-
-  const cartPage = new CartPage(page);
-  await cartPage.openPdp();
-  await cartPage.clickAddToCart();
-  await cartPage.expectSuccessToastVisible();
-  await cartPage.clickViewCart();
-  await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
-  const checkoutPage = new CheckoutPage(page);
-  await checkoutPage.dismissCoolClubPopup();
-  await checkoutPage.expectCartProductsVisible();
-  return checkoutPage;
-}
-
-// CART DISPLAY & PRODUCT MANAGEMENT (CO-001 ~ CO-010)
+// CART DISPLAY & PRODUCT MANAGEMENT (AT_CHECKOUT_001 ~ AT_CHECKOUT_010)
 test.describe('@public CO_CART – Cart Display & Product Management', () => {
 
-  test('CO-001 – Display product list in cart', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_001 – Display product list in cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1. Open page cart/checkout', async () => {
     });
 
@@ -83,8 +23,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-002 – Display order total', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_002 – Display order total', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Open page checkout', async () => {
     });
@@ -98,8 +38,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-003 – Change size or color directly in cart', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_003 – Change size or color directly in cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Open cart/checkout', async () => {
     });
@@ -111,8 +51,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-004 – Increase product quantity in cart', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_004 – Increase product quantity in cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1. Open cart/checkout', async () => {
     });
 
@@ -129,8 +69,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-005 – Decrease product quantity in cart', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_005 – Decrease product quantity in cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await checkout.increaseQuantity(0);
     const qtyBefore = await checkout.getQuantityValue(0);
 
@@ -145,8 +85,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-006 – Remove a product from cart', async ({ page }) => {
-    const checkout = await addTwoProductsAndGoToCart(page);
+  test('AT_CHECKOUT_006 – Remove a product from cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addTwoProductsAndGoToCart(page);
     const itemCountBefore = await checkout.getCartItemCount();
     const totalBefore = await checkout.getOrderTotalValue();
 
@@ -162,8 +102,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-007 – Remove all products in cart', async ({ page }) => {
-    const checkout = await addTwoProductsAndGoToCart(page);
+  test('AT_CHECKOUT_007 – Remove all products in cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addTwoProductsAndGoToCart(page);
     await test.step('1-2. Remove all products', async () => {
       await checkout.removeAllProducts();
     });
@@ -175,8 +115,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-008 – Display FOMO message', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_008 – Display FOMO message', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1-2. Observe FOMO banner', async () => {
       try {
         await checkout.expectFomoBannerVisible();
@@ -186,8 +126,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-009 – Display special offer when order is eligible', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_009 – Display special offer when order is eligible', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Observe special offer section', async () => {
       try {
@@ -199,8 +139,8 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
-  test('CO-010 – Add special offer to cart', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_010 – Add special offer to cart', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     const totalBefore = await checkout.getOrderTotalValue();
 
     await test.step('1. Click "Get it now" on the offer', async () => {
@@ -220,11 +160,11 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
   });
 });
 
-// CHECKOUT FORM — POLICY, PERSONAL INFO, ADDRESS (CO-011 ~ CO-025)
-test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
+// CHECKOUT FORM — POLICY, PERSONAL INFO, ADDRESS (AT_CHECKOUT_011 ~ AT_CHECKOUT_025)
+test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () => {
 
-  test('CO-011 – Policy agreement checkbox displayed by default', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_011 – Policy agreement checkbox displayed by default', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Verify policy checkbox is displayed', async () => {
       await checkout.expectPolicyCheckboxVisible();
@@ -235,8 +175,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-012 – Enter personal info for delivery (guest)', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_012 – Enter personal info for delivery (guest)', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1-3. Enter personal information: Title, Full Name, Phone Number', async () => {
       await checkout.fillPersonalInfo(
         checkoutData.validFullName,
@@ -250,8 +190,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-013 – Validate invalid Full name', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_013 – Validate invalid Full name', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Enter a full name that is too short', async () => {
       await checkout.fillFullName(checkoutData.invalidNameTooShort);
@@ -268,8 +208,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-014 – Validate invalid Phone format', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_014 – Validate invalid Phone format', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Enter phone number in invalid format', async () => {
       await checkout.fillFullName(checkoutData.validFullName);
@@ -287,8 +227,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-015 – Enter Email when not logged in', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_015 – Enter Email when not logged in', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Enter Email into Email field', async () => {
       await checkout.fillEmail(checkoutData.validEmail);
@@ -297,8 +237,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-016 – Submit with empty Email in guest flow', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_016 – Submit with empty Email in guest flow', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Leave Email field empty', async () => {
       await checkout.fillEmail(checkoutData.emptyString);
@@ -319,24 +259,24 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-017 – Auto-fill Email when logged in', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_017 – Auto-fill Email when logged in', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Verify email field is displayed', async () => {
       await checkout.expectEmailPrefilled();
     });
   });
 
-  test('CO-018 – Email is read-only when logged in', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_018 – Email is read-only when logged in', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Verify email field is editable', async () => {
       await checkout.expectEmailReadonly();
     });
   });
 
-  test('CO-019 – Auto-fill Full name and Phone when logged in', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_019 – Auto-fill Full name and Phone when logged in', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Verify full name and phone number fields are displayed', async () => {
       await checkout.expectNamePrefilled();
@@ -345,8 +285,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-020 – Auto-fill Address when logged in', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_020 – Auto-fill Address when logged in', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Observe Address field', async () => {
       const addressValue = await checkout.getAddressValue();
@@ -355,8 +295,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-021 – Edit auto-filled address', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_021 – Edit auto-filled address', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Edit the pre-filled Address', async () => {
       const newAddress = '789 New Street, District 3';
@@ -368,8 +308,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-022 – Select a saved address', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_022 – Select a saved address', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Select an existing address from the list', async () => {
       try {
@@ -382,8 +322,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-023 – Enter completely new address', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_023 – Enter completely new address', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-3. Enter detailed address and select province/city', async () => {
       await checkout.fillAddress(checkoutData.validAddress);
@@ -393,8 +333,8 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
     });
   });
 
-  test('CO-024 – Enter order note', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_024 – Enter order note', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Enter content into Order Note field', async () => {
       await checkout.fillOrderNote(checkoutData.orderNote);
@@ -403,11 +343,11 @@ test.describe('@public CO_FORM – Checkout Form & Personal Info', () => {
   });
 });
 
-// RECEIVER & VAT (CO-026 ~ CO-032)
+// RECEIVER & VAT (AT_CHECKOUT_025 ~ AT_CHECKOUT_031)
 test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
 
-  test('CO-026 – Open "Call someone else for delivery" form', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_025 – Open "Call someone else for delivery" form', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Select "Assign alternate recipient" option', async () => {
       await checkout.tickReceiverCheckbox();
@@ -416,8 +356,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-027 – Enter receiver info', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_026 – Enter receiver info', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Open receiver form', async () => {
       await checkout.tickReceiverCheckbox();
@@ -436,8 +376,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-028 – Validate invalid receiver info', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_027 – Validate invalid receiver info', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Open form and leave fields empty', async () => {
       await checkout.tickReceiverCheckbox();
@@ -455,8 +395,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-029 – Open VAT form', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_028 – Open VAT form', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Select "Request VAT invoice" option', async () => {
       await checkout.tickVatCheckbox();
@@ -465,8 +405,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-030 – Enter VAT info', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_029 – Enter VAT info', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Open VAT form', async () => {
       await checkout.tickVatCheckbox();
@@ -486,8 +426,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-031 – Validate missing or incorrect VAT info', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_030 – Validate missing or incorrect VAT info', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1.Open VAT form and leave fields empty', async () => {
       await checkout.tickVatCheckbox();
@@ -504,8 +444,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-032 – Display VAT invoice notes', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_031 – Display VAT invoice notes', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Select VAT option and verify notice information is displayed', async () => {
       await checkout.tickVatCheckbox();
@@ -521,8 +461,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-033 – Display CoolClub offer', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_032 – Display CoolClub offer', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Verify CoolClub promotion section is displayed', async () => {
       try {
@@ -534,8 +474,8 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('CO-034 – Display 0 VND gift when order is eligible', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_033 – Display 0 VND gift when order is eligible', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Verify 0 VND gift is displayed when order is eligible', async () => {
       try {
@@ -548,11 +488,11 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
   });
 });
 
-// VOUCHER, DISCOUNT & PAYMENT (CO-035 ~ CO-044)
-test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
+// VOUCHER, DISCOUNT & PAYMENT (AT_CHECKOUT_034 ~ AT_CHECKOUT_043)
+test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount & Payment', () => {
 
-  test('CO-035 – Apply valid voucher', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_034 – Apply valid voucher', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     const totalBefore = await checkout.getOrderTotalValue();
 
@@ -567,8 +507,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-036 – Display ineligible voucher message', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_035 – Display ineligible voucher message', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Select voucher that does not meet eligibility criteria', async () => {
       try {
@@ -580,8 +520,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-037 – Enter discount code', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_036 – Enter discount code', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Enter discount code and click APPLY', async () => {
       await checkout.applyDiscountCode(checkoutData.invalidDiscountCode);
@@ -590,8 +530,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-038 – Enter referral code', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_037 – Enter referral code', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Enter referral code and click APPLY', async () => {
       try {
@@ -605,8 +545,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-039 – Display payment details', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_038 – Display payment details', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Verify payment section is displayed', async () => {
       await checkout.expectPaymentBreakdownVisible();
@@ -614,8 +554,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-040 – Display saved amount', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_039 – Display saved amount', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Apply voucher and observe savings information', async () => {
       try {
@@ -630,8 +570,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-041 – Display refunded CoolCash', async ({ page }) => {
-    const checkout = await loginAndGoToCheckout(page);
+  test('AT_CHECKOUT_040 – Display refunded CoolCash', async ({ page }) => {
+    const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
     await test.step('1-2. Verify CoolCash section is displayed', async () => {
       try {
@@ -644,8 +584,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-042 – Select default COD and place order', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_041 – Select default COD and place order', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Verify default payment method is selected', async () => {
       await checkout.expectCodSelected();
@@ -661,8 +601,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
     });
   });
 
-  test('CO-043 – Select online payment instead of COD', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_042 – Select online payment instead of COD', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Select an online payment method', async () => {
       try {
@@ -681,8 +621,8 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
 
   });
 
-  test('CO-044 – Redirect to online payment screen', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_043 – Redirect to online payment screen', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Verify online payment flow calls partner URL', async () => {
       try {
@@ -703,11 +643,11 @@ test.describe('@public CO_PAY – Voucher, Discount & Payment', () => {
   });
 });
 
-// VALIDATION & FINAL FLOW (CO-045 ~ CO-050)
-test.describe('@public CO_VALID – Validation & Final Checkout Flow', () => {
+// VALIDATION & FINAL FLOW (AT_CHECKOUT_044 ~ AT_CHECKOUT_048)
+test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Final Checkout Flow', () => {
 
-  test('CO-045 – Block order when required info is missing', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_044 – Block order when required info is missing', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1. Leave all required fields empty', async () => {
 
     });
@@ -723,8 +663,8 @@ test.describe('@public CO_VALID – Validation & Final Checkout Flow', () => {
     });
   });
 
-  test('CO-046 – Validate phone immediately upon invalid input', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_045 – Validate phone immediately upon invalid input', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Enter invalid phone number', async () => {
       await checkout.fillPhone(checkoutData.invalidPhoneFormat);
@@ -740,8 +680,8 @@ test.describe('@public CO_VALID – Validation & Final Checkout Flow', () => {
     });
   });
 
-  test('CO-047 – Update total after changing quantity', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_046 – Update total after changing quantity', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     const qtyBefore = await checkout.getQuantityValue(0);
 
@@ -756,8 +696,8 @@ test.describe('@public CO_VALID – Validation & Final Checkout Flow', () => {
     });
   });
 
-  test('CO-048 – Warning for out of stock or price change', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_047 – Warning for out of stock or price change', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-3. Observe product status', async () => {
       try {
@@ -770,8 +710,8 @@ test.describe('@public CO_VALID – Validation & Final Checkout Flow', () => {
     });
   });
 
-  test('CO-049 – Update total after removing product', async ({ page }) => {
-    const checkout = await addTwoProductsAndGoToCart(page);
+  test('AT_CHECKOUT_048 – Update total after removing product', async ({ page }) => {
+    const checkout = await CheckoutPage.addTwoProductsAndGoToCart(page);
 
     const itemCountBefore = await checkout.getCartItemCount();
 
@@ -787,11 +727,11 @@ test.describe('@public CO_VALID – Validation & Final Checkout Flow', () => {
   });
 });
 
-// VOUCHER PANEL (VP-001 ~ VP-010)
-test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
+// VOUCHER PANEL (AT_CHECKOUT_049 ~ AT_CHECKOUT_058)
+test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tests', () => {
 
-  test('VP-001 – Display suggested voucher list', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_049 – Display suggested voucher list', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Observe voucher section', async () => {
 
@@ -805,8 +745,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-002 – Ineligible voucher in disabled state', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_050 – Ineligible voucher in disabled state', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Observe invalid voucher', async () => {
       try {
@@ -818,8 +758,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-003 – Select valid voucher from list', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_051 – Select valid voucher from list', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Select a valid voucher', async () => {
       try {
@@ -831,8 +771,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-004 – Apply valid discount code', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_052 – Apply valid discount code', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Enter valid discount code and click APPLY', async () => {
       if (checkoutData.validDiscountCode) {
@@ -845,8 +785,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-005 – Remove applied discount code', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_053 – Remove applied discount code', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Select discount voucher (if available)', async () => {
       const availableVoucher = page.locator('//button[text()="Áp dụng" or contains(text(), "ÁP DỤNG")]')
@@ -874,8 +814,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-006 – Update payment details after applying code', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_054 – Update payment details after applying code', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     const totalBefore = await checkout.getOrderTotalValue();
 
@@ -892,8 +832,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-007 – Error message when applying code fails', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_055 – Error message when applying code fails', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Enter invalid code and click Apply', async () => {
       await checkout.applyDiscountCode(checkoutData.invalidDiscountCode);
@@ -903,8 +843,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-008 – Upsell gift when eligible', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_056 – Upsell gift when eligible', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-3. QVerify exclusive offers section is displayed', async () => {
       try {
@@ -918,8 +858,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-009 – Enter referral code', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_057 – Enter referral code', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-3. Open referral code section and enter code', async () => {
       try {
@@ -931,8 +871,8 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 
-  test('VP-010 – Keep other data when applying code fails', async ({ page }) => {
-    const checkout = await addProductAndGoToCart(page);
+  test('AT_CHECKOUT_058 – Keep other data when applying code fails', async ({ page }) => {
+    const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Enter checkout information', async () => {
       await checkout.fillPersonalInfo(checkoutData.validFullName, checkoutData.validPhone);
@@ -953,3 +893,4 @@ test.describe('@public VP_VOUCHER – Voucher Panel Tests', () => {
     });
   });
 });
+

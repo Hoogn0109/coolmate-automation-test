@@ -57,10 +57,8 @@ export default defineConfig({
     {
       name: '01_Login',
       testMatch: ['login.spec.ts'],
-      //dependencies: ['setup'],
       use: {
         ...devices['Pixel 7'],
-        //storageState: 'auth_state_user.json',
       },
     },
 
@@ -91,6 +89,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
       },
+    },
+    {
+      name: '06_Payment',
+      testMatch: ['payment.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+      timeout: 180_000,
     },
   ],
 
