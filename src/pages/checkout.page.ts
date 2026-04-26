@@ -1,5 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { CHECKOUT_LOCATOR } from '../locator/checkout.locator';
+import { CartPage } from './cart.page';
+import { LoginPage } from './login.page';
 
 export class CheckoutPage {
   readonly page: Page;
@@ -92,6 +94,57 @@ export class CheckoutPage {
   readonly phoneError: Locator;
   readonly emailError: Locator;
   readonly fieldErrorMessages: Locator;
+
+  static async addProductAndGoToCart(page: Page): Promise<CheckoutPage> {
+    const cartPage = new CartPage(page);
+    await cartPage.openPdp();
+    await cartPage.clickAddToCart();
+
+    await page.goto(process.env.BASE_URL + 'cart');
+    await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+    return checkoutPage;
+  }
+
+  static async addTwoProductsAndGoToCart(page: Page): Promise<CheckoutPage> {
+    const cartPage = new CartPage(page);
+    await cartPage.openPdp();
+    await cartPage.clickAddToCart();
+    await cartPage.dismissToast().catch(() => { });
+    await cartPage.clickAddToCart();
+
+    await page.goto(process.env.BASE_URL + 'cart');
+    await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+    return checkoutPage;
+  }
+
+  static async loginAndGoToCheckout(page: Page): Promise<CheckoutPage> {
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.openLoginForm();
+    await loginPage.login(process.env.USER_NAME!, process.env.PASS_WORD!);
+    await loginPage.verifyLoginSuccess();
+
+    const cartPage = new CartPage(page);
+    await cartPage.openPdp();
+    await cartPage.clickAddToCart();
+    await cartPage.expectCartCountIncreased(0);
+
+    await page.goto(process.env.BASE_URL + 'cart');
+    await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+
+    const checkoutPage = new CheckoutPage(page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+    return checkoutPage;
+  }
 
   constructor(page: Page) {
     this.page = page;
