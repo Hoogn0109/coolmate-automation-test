@@ -93,12 +93,8 @@ export class SearchPage {
     }
 
     await this.inputSearch.fill(keyword);
-    const buttonVisible = await this.btnSearch.first().isVisible({ timeout: 2000 }).catch(() => false);
-    if (buttonVisible) {
-      await this.btnSearch.first().click({ force: true });
-    } else {
-      await this.inputSearch.press('Enter');
-    }
+    await this.btnSearch.first().waitFor({ state: 'visible', timeout: 5000 });
+    await this.btnSearch.first().click({ force: true });
     await this.page.waitForTimeout(1500);
   }
 

@@ -765,7 +765,10 @@ test.describe('@checkout @public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher
     });
 
     await test.step('2. Click "Remove discount code" and check Toast', async () => {
-      await checkout.removeDiscountIfVisibleAndExpectToast();
+      const removed = await checkout.removeDiscountIfVisibleAndExpectToast();
+      if (!removed) {
+        console.log('No discount was applied — remove button not visible. Skipping removal assertion.');
+      }
     });
   });
 

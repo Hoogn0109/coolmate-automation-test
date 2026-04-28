@@ -907,15 +907,15 @@ export class CheckoutPage {
     await this.page.waitForTimeout(1_000);
   }
 
-  async removeDiscountIfVisibleAndExpectToast() {
+  async removeDiscountIfVisibleAndExpectToast(): Promise<boolean> {
     if (await this.discountRemoveBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await this.discountRemoveBtn.click();
       const toast = this.page.locator(CHECKOUT_LOCATOR.discountRemovedToast).first();
       await expect(toast).toBeVisible({ timeout: 5_000 });
-      return;
+      return true;
     }
 
-    expect(true).toBeTruthy();
+    return false;
   }
 
   async expectDiscountRemoved() {
