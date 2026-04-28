@@ -1,66 +1,66 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { searchPage } from '../locator/search.locator';
+import { SEARCH_LOCATORS } from '../locator/search.locator';
 import { timeDelay } from '../data/search.data';
 
 export class SearchPage {
-  readonly searchPopup: Locator;
-  readonly inputSearch: Locator;
-  readonly btnSearch: Locator;
-  readonly btnClearSearch: Locator;
-  readonly txtSuggestion: Locator;
-  readonly txtSuggestionItem: Locator;
-  readonly txtSuggestionItems: Locator;
-  readonly txtResult: Locator;
-  readonly resultProduct: Locator;
-  readonly imgProduct: Locator;
-  readonly DescriptionProduct: Locator;
-  readonly PriceProduct: Locator;
-  readonly viewAllButton: Locator;
-  readonly trendingKeywordTitle: Locator;
-  readonly trendingKeywordItem: Locator;
-  readonly noResultProduct: Locator;
-  readonly searchResultGrid: Locator;
-  readonly searchResultItems: Locator;
-  readonly btnSearchPopup: Locator;
-  readonly productItem: Locator;
-  readonly productItems: Locator;
-  readonly btnSeeMore: Locator;
-  readonly btnContribute: Locator;
-  readonly btnFacebook: Locator;
-  readonly btnZalo: Locator;
-  readonly btnInstagram: Locator;
-  readonly btnTiktok: Locator;
-  readonly btnYoutube: Locator;
+  private readonly searchPopup: Locator;
+  private readonly inputSearch: Locator;
+  private readonly btnSearch: Locator;
+  private readonly btnClearSearch: Locator;
+  private readonly txtSuggestion: Locator;
+  private readonly txtSuggestionItem: Locator;
+  private readonly txtSuggestionItems: Locator;
+  private readonly txtResult: Locator;
+  private readonly resultProduct: Locator;
+  private readonly imgProduct: Locator;
+  private readonly DescriptionProduct: Locator;
+  private readonly PriceProduct: Locator;
+  private readonly viewAllButton: Locator;
+  private readonly trendingKeywordTitle: Locator;
+  private readonly trendingKeywordItem: Locator;
+  private readonly noResultProduct: Locator;
+  private readonly searchResultGrid: Locator;
+  private readonly searchResultItems: Locator;
+  private readonly btnSearchPopup: Locator;
+  private readonly productItem: Locator;
+  private readonly productItems: Locator;
+  private readonly btnSeeMore: Locator;
+  private readonly btnContribute: Locator;
+  private readonly btnFacebook: Locator;
+  private readonly btnZalo: Locator;
+  private readonly btnInstagram: Locator;
+  private readonly btnTiktok: Locator;
+  private readonly btnYoutube: Locator;
 
   constructor(private readonly page: Page) {
-    this.searchPopup = page.locator(searchPage.searchPopup);
-    this.inputSearch = page.locator(searchPage.inputSearch);
-    this.btnSearch = page.locator(searchPage.btnSearch);
-    this.btnClearSearch = page.locator(searchPage.btnClearSearch);
-    this.txtSuggestion = page.locator(searchPage.txtSuggestion);
-    this.txtSuggestionItem = page.locator(searchPage.txtSuggestionItem);
-    this.txtSuggestionItems = page.locator(searchPage.txtSuggestionItems);
-    this.txtResult = page.locator(searchPage.txtResult);
-    this.resultProduct = page.locator(searchPage.resultProduct);
-    this.imgProduct = page.locator(searchPage.imgProduct);
-    this.DescriptionProduct = page.locator(searchPage.DescriptionProduct);
-    this.PriceProduct = page.locator(searchPage.PriceProduct);
-    this.viewAllButton = page.locator(searchPage.viewAllButton);
-    this.trendingKeywordTitle = page.locator(searchPage.trendingKeywordTitle);
-    this.trendingKeywordItem = page.locator(searchPage.trendingKeywordItem);
-    this.noResultProduct = page.locator(searchPage.noResultProduct);
-    this.searchResultGrid = page.locator(searchPage.searchResultGrid);
-    this.searchResultItems = page.locator(searchPage.searchResultItems);
-    this.btnSearchPopup = page.locator(searchPage.btnSearchPopup);
-    this.productItem = page.locator(searchPage.productItem);
-    this.productItems = page.locator(searchPage.productItems);
-    this.btnSeeMore = page.locator(searchPage.btnSeeMore);
-    this.btnContribute = page.locator(searchPage.btnContribute);
-    this.btnFacebook = page.locator(searchPage.btnFacebook);
-    this.btnZalo = page.locator(searchPage.btnZalo);
-    this.btnInstagram = page.locator(searchPage.btnInstagram);
-    this.btnTiktok = page.locator(searchPage.btnTiktok);
-    this.btnYoutube = page.locator(searchPage.btnYoutube);
+    this.searchPopup = page.locator(SEARCH_LOCATORS.searchPopup);
+    this.inputSearch = page.locator(SEARCH_LOCATORS.inputSearch);
+    this.btnSearch = page.locator(SEARCH_LOCATORS.btnSearch);
+    this.btnClearSearch = page.locator(SEARCH_LOCATORS.btnClearSearch);
+    this.txtSuggestion = page.locator(SEARCH_LOCATORS.txtSuggestion);
+    this.txtSuggestionItem = page.locator(SEARCH_LOCATORS.txtSuggestionItem);
+    this.txtSuggestionItems = page.locator(SEARCH_LOCATORS.txtSuggestionItems);
+    this.txtResult = page.locator(SEARCH_LOCATORS.txtResult);
+    this.resultProduct = page.locator(SEARCH_LOCATORS.resultProduct);
+    this.imgProduct = page.locator(SEARCH_LOCATORS.imgProduct);
+    this.DescriptionProduct = page.locator(SEARCH_LOCATORS.DescriptionProduct);
+    this.PriceProduct = page.locator(SEARCH_LOCATORS.PriceProduct);
+    this.viewAllButton = page.locator(SEARCH_LOCATORS.viewAllButton);
+    this.trendingKeywordTitle = page.locator(SEARCH_LOCATORS.trendingKeywordTitle);
+    this.trendingKeywordItem = page.locator(SEARCH_LOCATORS.trendingKeywordItem);
+    this.noResultProduct = page.locator(SEARCH_LOCATORS.noResultProduct);
+    this.searchResultGrid = page.locator(SEARCH_LOCATORS.searchResultGrid);
+    this.searchResultItems = page.locator(SEARCH_LOCATORS.searchResultItems);
+    this.btnSearchPopup = page.locator(SEARCH_LOCATORS.btnSearchPopup);
+    this.productItem = page.locator(SEARCH_LOCATORS.productItem);
+    this.productItems = page.locator(SEARCH_LOCATORS.productItems);
+    this.btnSeeMore = page.locator(SEARCH_LOCATORS.btnSeeMore);
+    this.btnContribute = page.locator(SEARCH_LOCATORS.btnContribute);
+    this.btnFacebook = page.locator(SEARCH_LOCATORS.btnFacebook);
+    this.btnZalo = page.locator(SEARCH_LOCATORS.btnZalo);
+    this.btnInstagram = page.locator(SEARCH_LOCATORS.btnInstagram);
+    this.btnTiktok = page.locator(SEARCH_LOCATORS.btnTiktok);
+    this.btnYoutube = page.locator(SEARCH_LOCATORS.btnYoutube);
   }
 
   async verifySearchButtonVisible() {
@@ -93,8 +93,12 @@ export class SearchPage {
     }
 
     await this.inputSearch.fill(keyword);
-    await this.btnSearch.waitFor({ state: 'visible', timeout: 15000 });
-    await this.btnSearch.click({ force: true });
+    const buttonVisible = await this.btnSearch.first().isVisible({ timeout: 2000 }).catch(() => false);
+    if (buttonVisible) {
+      await this.btnSearch.first().click({ force: true });
+    } else {
+      await this.inputSearch.press('Enter');
+    }
     await this.page.waitForTimeout(1500);
   }
 
@@ -163,8 +167,12 @@ export class SearchPage {
 
   async verifySearchResultGridFormat() {
     await this.searchResultGrid.waitFor({ state: 'visible', timeout: 15000 });
-    const itemCount = await this.searchResultItems.count();
-    expect(itemCount).toBeGreaterThan(0);
+    await expect.poll(async () => this.searchResultItems.count(), {
+      timeout: timeDelay.longDelay,
+      intervals: [500, 1000, 2000, 3000],
+      message: 'Search result grid should contain at least one product item',
+    }).toBeGreaterThan(0);
+    await expect(this.searchResultItems.first()).toBeVisible({ timeout: 5000 });
   }
 
   async clickViewAll() {

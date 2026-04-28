@@ -1,8 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { LoginPage } from '../pages/login.page';
 import { loginData } from '../data/login.data';
 
 test.use({ storageState: { cookies: [], origins: [] } });
+
+type LoginValidationCase = (typeof loginData.validationCases)[number];
+type LoginSocialCase = (typeof loginData.socialLoginCases)[number];
+type LoginNavigationCase = (typeof loginData.navigationCases)[number];
 
 test.describe('@login Login Page Test', () => {
 
@@ -16,95 +20,37 @@ test.describe('@login Login Page Test', () => {
 
     // @TmsLink AT_LOGIN_001
     test('AT_LOGIN_001: Verify login form elements', async () => {
-        await test.step('Verify login form elements', async () => {
+        await test.step('1. Verify login form elements', async () => {
             await loginPage.verifyLoginFormElements();
         });
     });
 
-    // @TmsLink AT_LOGIN_002
-    test('AT_LOGIN_002: Login success with email', async () => {
-        await test.step('1. Login with valid email and password', async () => {
-            const responsePromise = loginPage.waitForLoginResponse(200);
-            await loginPage.login(loginData.validEmail, loginData.validPassword);
-            const response = await responsePromise;
-            await loginPage.verifyLoginSuccessResponse(response);
-        });
+    for (const scenario of loginData.successfulLoginCases) {
+        test(`${scenario.tmsId}: ${scenario.title}`, async () => {
+            await test.step(`1. ${scenario.step}`, async () => {
+                const responsePromise = loginPage.waitForLoginResponse(200);
+                await loginPage.login(scenario.username, scenario.password);
+                const response = await responsePromise;
+                await loginPage.verifyLoginSuccessResponse(response);
+            });
 
-        await test.step('2. Verify login success', async () => {
-            await loginPage.verifyLoginSuccess();
+            await test.step('2. Verify login success', async () => {
+                await loginPage.verifyLoginSuccess();
+            });
         });
-    });
+    }
 
-    // @TmsLink AT_LOGIN_003
-    test('AT_LOGIN_003: Login success with phone number', async () => {
-        await test.step('1. Login with valid phone and password', async () => {
-            const responsePromise = loginPage.waitForLoginResponse(200);
-            await loginPage.login(loginData.validPhone, loginData.validPassword);
-            const response = await responsePromise;
-            await loginPage.verifyLoginSuccessResponse(response);
-        });
+    for (const scenario of loginData.validationCases) {
+        test(`${scenario.tmsId}: ${scenario.title}`, async () => {
+            await test.step(`1. ${scenario.step}`, async () => {
+                await submitLoginValidationInput(loginPage, scenario);
+            });
 
-        await test.step('2. Verify login success', async () => {
-            await loginPage.verifyLoginSuccess();
+            await test.step(`2. ${scenario.verifyStep}`, async () => {
+                await verifyLoginValidation(loginPage, scenario);
+            });
         });
-    });
-
-    // @TmsLink AT_LOGIN_004
-    test('AT_LOGIN_004: Empty email', async () => {
-        await test.step('1. Fill password and submit', async () => {
-            await loginPage.fillPassword(loginData.validPassword);
-            await loginPage.submitLogin();
-        });
-
-        await test.step('2. Verify email required error', async () => {
-            await loginPage.verifyEmailRequiredError();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_005
-    test('AT_LOGIN_005: Empty password', async () => {
-        await test.step('1. Fill email and submit', async () => {
-            await loginPage.fillEmail(loginData.validEmail);
-            await loginPage.submitLogin();
-        });
-
-        await test.step('2. Verify password required error', async () => {
-            await loginPage.verifyPasswordRequiredError();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_006
-    test('AT_LOGIN_006: Invalid email format', async () => {
-        await test.step('1. Login with invalid email format', async () => {
-            await loginPage.login(loginData.invalidEmailOrPassword, loginData.validPassword);
-        });
-
-        await test.step('2. Verify invalid email or phone error', async () => {
-            await loginPage.verifyInvalidEmailOrPhoneError();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_007
-    test('AT_LOGIN_007: Invalid phone number', async () => {
-        await test.step('1. Login with invalid phone number', async () => {
-            await loginPage.login(loginData.invalidPhone, loginData.validPassword);
-        });
-
-        await test.step('2. Verify invalid phone error', async () => {
-            await loginPage.verifyInvalidPhoneError();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_008
-    test('AT_LOGIN_008: Password < 6 chars', async () => {
-        await test.step('1. Login with password < 6 characters', async () => {
-            await loginPage.login(loginData.validEmail, loginData.passwordLessThan6Chars);
-        });
-
-        await test.step('2. Verify password min length error', async () => {
-            await loginPage.verifyPasswordMinLengthError();
-        });
-    });
+    }
 
     // @TmsLink AT_LOGIN_009
     test('AT_LOGIN_009: Toggle password', async () => {
@@ -128,60 +74,17 @@ test.describe('@login Login Page Test', () => {
         });
     });
 
-    // @TmsLink AT_LOGIN_011
-    test('AT_LOGIN_011: Email contains space', async () => {
-        await test.step('1. Login with email contains space', async () => {
-            await loginPage.login(loginData.invalidEmailWithSpace, loginData.validPassword);
-        });
+    for (const scenario of loginData.socialLoginCases) {
+        test(`${scenario.tmsId}: ${scenario.title}`, async () => {
+            await test.step(`1. ${scenario.clickStep}`, async () => {
+                await clickSocialLogin(loginPage, scenario);
+            });
 
-        await test.step('2. Verify invalid email error', async () => {
-            await loginPage.verifyInvalidEmailError();
+            await test.step(`2. ${scenario.verifyStep}`, async () => {
+                await verifySocialLogin(loginPage, scenario);
+            });
         });
-    });
-
-    // @TmsLink AT_LOGIN_012
-    test('AT_LOGIN_012: Only whitespace', async () => {
-        await test.step('1. Login with only whitespace characters', async () => {
-            await loginPage.login(loginData.trimEmail, loginData.trimPassword);
-        });
-
-        await test.step('2. Verify whitespace error message', async () => {
-            await loginPage.verifyTrimError();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_013
-    test('AT_LOGIN_013: Login with Google', async () => {
-        await test.step('1. Click Login with Google', async () => {
-            await loginPage.clickGoogleLogin();
-        });
-
-        await test.step('2. Verify Google Sign-in page', async () => {
-            await loginPage.verifyGoogleSignInPage();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_014
-    test('AT_LOGIN_014: Login with Facebook', async () => {
-        await test.step('1. Click Login with Facebook', async () => {
-            await loginPage.clickFacebookLogin();
-        });
-
-        await test.step('2. Verify Facebook Sign-in page', async () => {
-            await loginPage.verifyFacebookSignInPage();
-        });
-    });
-
-    // @TmsLink AT_LOGIN_015
-    test('AT_LOGIN_015: Login with QR', async () => {
-        await test.step('1. Click Login with QR Code', async () => {
-            await loginPage.clickQRLogin();
-        });
-
-        await test.step('2. Verify QR Login modal Displayed', async () => {
-            await loginPage.verifyQRLoginModal();
-        });
-    });
+    }
 
     // @TmsLink AT_LOGIN_016
     test('AT_LOGIN_016: Keep logged-in state after refresh', async () => {
@@ -194,32 +97,112 @@ test.describe('@login Login Page Test', () => {
         });
 
         await test.step('2. Reload page and verify logged-in state', async () => {
-            await loginPage.page.reload();
-            await loginPage.page.waitForLoadState('networkidle');
+            await loginPage.reloadAndWait();
             await loginPage.verifyIsLoggedIn();
         });
     });
 
-    // @TmsLink AT_LOGIN_017
-    test('AT_LOGIN_017: Navigate register', async () => {
-        await test.step('1. Click register button', async () => {
-            await loginPage.btnRegister.click();
-        });
+    for (const scenario of loginData.navigationCases) {
+        test(`${scenario.tmsId}: ${scenario.title}`, async () => {
+            await test.step(`1. ${scenario.clickStep}`, async () => {
+                await openLoginNavigation(loginPage, scenario);
+            });
 
-        await test.step('2. Verify register popup', async () => {
-            await loginPage.verifyRegisterPopup();
+            await test.step(`2. ${scenario.verifyStep}`, async () => {
+                await verifyLoginNavigation(loginPage, scenario);
+            });
         });
-    });
-
-    // @TmsLink AT_LOGIN_018
-    test('AT_LOGIN_018: Navigate forgot password', async () => {
-        await test.step('1. Click forgot password button', async () => {
-            await loginPage.btnForgotPassword.click();
-        });
-
-        await test.step('2. Verify forgot password popup', async () => {
-            await loginPage.verifyForgotPasswordPopup();
-        });
-    });
-
+    }
 });
+
+async function submitLoginValidationInput(loginPage: LoginPage, scenario: LoginValidationCase) {
+    switch (scenario.inputMode) {
+        case 'passwordOnly':
+            await loginPage.fillPassword(scenario.password);
+            await loginPage.submitLogin();
+            break;
+        case 'emailOnly':
+            await loginPage.fillEmail(scenario.username);
+            await loginPage.submitLogin();
+            break;
+        case 'login':
+            await loginPage.login(scenario.username, scenario.password);
+            break;
+    }
+}
+
+async function verifyLoginValidation(loginPage: LoginPage, scenario: LoginValidationCase) {
+    switch (scenario.expected) {
+        case 'emailRequired':
+            await loginPage.verifyEmailRequiredError();
+            break;
+        case 'passwordRequired':
+            await loginPage.verifyPasswordRequiredError();
+            break;
+        case 'invalidEmailOrPhone':
+            await loginPage.verifyInvalidEmailOrPhoneError();
+            break;
+        case 'invalidPhone':
+            await loginPage.verifyInvalidPhoneError();
+            break;
+        case 'passwordMinLength':
+            await loginPage.verifyPasswordMinLengthError();
+            break;
+        case 'invalidEmail':
+            await loginPage.verifyInvalidEmailError();
+            break;
+        case 'trimError':
+            await loginPage.verifyTrimError();
+            break;
+    }
+}
+
+async function clickSocialLogin(loginPage: LoginPage, scenario: LoginSocialCase) {
+    switch (scenario.provider) {
+        case 'google':
+            await loginPage.clickGoogleLogin();
+            break;
+        case 'facebook':
+            await loginPage.clickFacebookLogin();
+            break;
+        case 'qr':
+            await loginPage.clickQRLogin();
+            break;
+    }
+}
+
+async function verifySocialLogin(loginPage: LoginPage, scenario: LoginSocialCase) {
+    switch (scenario.provider) {
+        case 'google':
+            await loginPage.verifyGoogleSignInPage();
+            break;
+        case 'facebook':
+            await loginPage.verifyFacebookSignInPage();
+            break;
+        case 'qr':
+            await loginPage.verifyQRLoginModal();
+            break;
+    }
+}
+
+async function openLoginNavigation(loginPage: LoginPage, scenario: LoginNavigationCase) {
+    switch (scenario.target) {
+        case 'register':
+            await loginPage.openRegisterPopup();
+            break;
+        case 'forgotPassword':
+            await loginPage.openForgotPasswordPopup();
+            break;
+    }
+}
+
+async function verifyLoginNavigation(loginPage: LoginPage, scenario: LoginNavigationCase) {
+    switch (scenario.target) {
+        case 'register':
+            await loginPage.verifyRegisterPopup();
+            break;
+        case 'forgotPassword':
+            await loginPage.verifyForgotPasswordPopup();
+            break;
+    }
+}

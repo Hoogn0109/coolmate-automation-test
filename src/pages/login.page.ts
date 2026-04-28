@@ -1,80 +1,85 @@
 import { Page, Locator, expect, Response } from '@playwright/test';
-import { loginPage } from '../locator/login.locator';
+import { LOGIN_LOCATORS } from '../locator/login.locator';
 import { loginData } from '../data/login.data';
 
 export class LoginPage {
-    readonly page: Page;
+    private readonly page: Page;
 
     // Elements
-    readonly btnLogin: Locator;
-    readonly inputEmail: Locator;
-    readonly inputPassword: Locator;
-    readonly btnConfirmLogin: Locator;
-    readonly btnTogglePassword: Locator;
-    readonly btnGoogleLogin: Locator;
-    readonly btnFacebookLogin: Locator;
-    readonly btnQRLogin: Locator;
-    readonly btnClosePopup: Locator;
+    private readonly btnLogin: Locator;
+    private readonly inputEmail: Locator;
+    private readonly inputPassword: Locator;
+    private readonly btnConfirmLogin: Locator;
+    private readonly btnTogglePassword: Locator;
+    private readonly btnGoogleLogin: Locator;
+    private readonly btnFacebookLogin: Locator;
+    private readonly btnQRLogin: Locator;
+    private readonly btnClosePopup: Locator;
 
     // Messages
-    readonly txtSuccessLogin: Locator;
-    readonly emailRequiredErrorMessage: Locator;
-    readonly passwordRequiredErrorMessage: Locator;
-    readonly passwordMinLengthError: Locator;
-    readonly txtInvalidEmailOrPasswordError: Locator;
-    readonly txtInvalidEmailOrPhoneError: Locator;
-    readonly txtInvalidEmailError: Locator;
-    readonly txtInvalidPhoneError: Locator;
-    readonly txtTrimError: Locator;
-    readonly txtGoogleChooseAccount: Locator;
-    readonly txtFacebookLoginHeading: Locator;
+    private readonly txtSuccessLogin: Locator;
+    private readonly emailRequiredErrorMessage: Locator;
+    private readonly passwordRequiredErrorMessage: Locator;
+    private readonly passwordMinLengthError: Locator;
+    private readonly txtInvalidEmailOrPasswordError: Locator;
+    private readonly txtInvalidEmailOrPhoneError: Locator;
+    private readonly txtInvalidEmailError: Locator;
+    private readonly txtInvalidPhoneError: Locator;
+    private readonly txtTrimError: Locator;
+    private readonly txtGoogleChooseAccount: Locator;
+    private readonly txtFacebookLoginHeading: Locator;
 
     // Navigation
-    readonly btnRegister: Locator;
-    readonly btnForgotPassword: Locator;
-    readonly btnVerify: Locator;
-    readonly txtRegisterPopup: Locator;
-    readonly txtForgotPasswordPopup: Locator;
-    readonly txtQRLoginHeading: Locator;
-    readonly btnAccount: Locator;
+    private readonly btnRegister: Locator;
+    private readonly btnForgotPassword: Locator;
+    private readonly btnVerify: Locator;
+    private readonly txtRegisterPopup: Locator;
+    private readonly txtForgotPasswordPopup: Locator;
+    private readonly txtQRLoginHeading: Locator;
+    private readonly btnAccount: Locator;
 
     constructor(page: Page) {
         this.page = page;
 
-        this.btnLogin = page.locator(loginPage.btnLogin);
-        this.inputEmail = page.locator(loginPage.inputEmail);
-        this.inputPassword = page.locator(loginPage.inputPassword);
-        this.btnConfirmLogin = page.locator(loginPage.btnConfirmLogin);
-        this.btnTogglePassword = page.locator(loginPage.btnTogglePassword);
-        this.btnGoogleLogin = page.locator(loginPage.btnGoogleLogin);
-        this.btnFacebookLogin = page.locator(loginPage.btnFacebookLogin);
-        this.btnQRLogin = page.locator(loginPage.btnQRLogin);
-        this.btnClosePopup = page.locator(loginPage.btnClosePopup);
+        this.btnLogin = page.locator(LOGIN_LOCATORS.btnLogin);
+        this.inputEmail = page.locator(LOGIN_LOCATORS.inputEmail);
+        this.inputPassword = page.locator(LOGIN_LOCATORS.inputPassword);
+        this.btnConfirmLogin = page.locator(LOGIN_LOCATORS.btnConfirmLogin);
+        this.btnTogglePassword = page.locator(LOGIN_LOCATORS.btnTogglePassword);
+        this.btnGoogleLogin = page.locator(LOGIN_LOCATORS.btnGoogleLogin);
+        this.btnFacebookLogin = page.locator(LOGIN_LOCATORS.btnFacebookLogin);
+        this.btnQRLogin = page.locator(LOGIN_LOCATORS.btnQRLogin);
+        this.btnClosePopup = page.locator(LOGIN_LOCATORS.btnClosePopup);
 
-        this.txtSuccessLogin = page.locator(loginPage.txtSuccessLogin);
-        this.emailRequiredErrorMessage = page.locator(loginPage.emailRequiredErrorMessage);
-        this.passwordRequiredErrorMessage = page.locator(loginPage.passwordRequiredErrorMessage);
-        this.passwordMinLengthError = page.locator(loginPage.passwordMinLengthError);
-        this.txtInvalidEmailOrPasswordError = page.locator(loginPage.txtInvalidEmailOrPasswordError);
-        this.txtInvalidEmailOrPhoneError = page.locator(loginPage.txtInvalidEmailOrPhoneError);
-        this.txtInvalidEmailError = page.locator(loginPage.txtInvalidEmailError);
-        this.txtInvalidPhoneError = page.locator(loginPage.txtInvalidPhoneError);
-        this.txtTrimError = page.locator(loginPage.txtTrimError);
-        this.txtGoogleChooseAccount = page.locator(loginPage.txtGoogleChooseAccount);
-        this.txtFacebookLoginHeading = page.locator(loginPage.txtFacebookLoginHeading);
-        this.txtQRLoginHeading = page.locator(loginPage.txtQRLoginHeading);
+        this.txtSuccessLogin = page.locator(LOGIN_LOCATORS.txtSuccessLogin);
+        this.emailRequiredErrorMessage = page.locator(LOGIN_LOCATORS.emailRequiredErrorMessage);
+        this.passwordRequiredErrorMessage = page.locator(LOGIN_LOCATORS.passwordRequiredErrorMessage);
+        this.passwordMinLengthError = page.locator(LOGIN_LOCATORS.passwordMinLengthError);
+        this.txtInvalidEmailOrPasswordError = page.locator(LOGIN_LOCATORS.txtInvalidEmailOrPasswordError);
+        this.txtInvalidEmailOrPhoneError = page.locator(LOGIN_LOCATORS.txtInvalidEmailOrPhoneError);
+        this.txtInvalidEmailError = page.locator(LOGIN_LOCATORS.txtInvalidEmailError);
+        this.txtInvalidPhoneError = page.locator(LOGIN_LOCATORS.txtInvalidPhoneError);
+        this.txtTrimError = page.locator(LOGIN_LOCATORS.txtTrimError);
+        this.txtGoogleChooseAccount = page.locator(LOGIN_LOCATORS.txtGoogleChooseAccount);
+        this.txtFacebookLoginHeading = page.locator(LOGIN_LOCATORS.txtFacebookLoginHeading);
+        this.txtRegisterPopup = page.locator(LOGIN_LOCATORS.txtRegisterPopup);
+        this.txtQRLoginHeading = page.locator(LOGIN_LOCATORS.txtQRLoginHeading);
 
-        this.btnRegister = page.locator(loginPage.btnRegister);
-        this.btnForgotPassword = page.locator(loginPage.btnForgotPassword);
-        this.btnVerify = page.locator(loginPage.btnVerify);
-        this.txtRegisterPopup = page.locator(loginPage.txtRegisterPopup);
-        this.txtForgotPasswordPopup = page.locator(loginPage.txtForgotPasswordPopup);
-        this.btnAccount = page.locator(loginPage.btnAccount);
+        this.btnRegister = page.locator(LOGIN_LOCATORS.btnRegister);
+        this.btnForgotPassword = page.locator(LOGIN_LOCATORS.btnForgotPassword);
+        this.btnVerify = page.locator(LOGIN_LOCATORS.btnVerify);
+        this.txtForgotPasswordPopup = page.locator(LOGIN_LOCATORS.txtForgotPasswordPopup);
+        this.btnAccount = page.locator(LOGIN_LOCATORS.btnAccount);
 
     }
 
     async open() {
         await this.page.goto('/');
+    }
+
+    async reloadAndWait() {
+        await this.page.reload();
+        await this.page.waitForLoadState('networkidle');
     }
 
     async openLoginForm() {
@@ -107,7 +112,7 @@ export class LoginPage {
         await this.submitLogin();
     }
 
-    //API HANDLER
+    //Api helpers
     async waitForLoginResponse(expectedStatus: number): Promise<Response> {
         return await this.page.waitForResponse(res =>
             res.url().includes('/login') && res.status() === expectedStatus
@@ -194,8 +199,16 @@ export class LoginPage {
         await expect(this.txtRegisterPopup).toBeVisible({ timeout: 10000 });
     }
 
+    async openRegisterPopup() {
+        await this.btnRegister.click();
+    }
+
     async verifyForgotPasswordPopup() {
         await expect(this.txtForgotPasswordPopup).toBeVisible();
+    }
+
+    async openForgotPasswordPopup() {
+        await this.btnForgotPassword.click();
     }
 
     async clickGoogleLogin() {
@@ -203,7 +216,7 @@ export class LoginPage {
     }
 
     async verifyGoogleSignInPage(page: Page = this.page) {
-        const heading = page.locator(loginPage.txtGoogleChooseAccount);
+        const heading = page.locator(LOGIN_LOCATORS.txtGoogleChooseAccount);
         await expect(heading).toBeVisible();
     }
 
@@ -212,7 +225,7 @@ export class LoginPage {
     }
 
     async verifyFacebookSignInPage(page: Page = this.page) {
-        const heading = page.locator(loginPage.txtFacebookLoginHeading);
+        const heading = page.locator(LOGIN_LOCATORS.txtFacebookLoginHeading);
         await expect(heading).toBeVisible();
     }
 

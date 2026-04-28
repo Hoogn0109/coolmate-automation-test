@@ -1,5 +1,6 @@
-export const loginPage = {
+export const LOGIN_LOCATORS = {
 
+  //Buttons to open login popup
   btnLogin: "//button[.//img[@alt='account']]",
   btnAccount: "//header//a[contains(@href, '/account')]",
   btnClosePopup: "//button[@type='button' and contains(@class,'absolute') and contains(@class,'right-1') and contains(@class,'top-1')]",

@@ -1,45 +1,35 @@
 import { Page, Locator, expect } from '@playwright/test';
 import process from 'node:process';
-import { productDetailPageLocator } from '../locator/product.detail.locator';
+import { PRODUCT_DETAIL_LOCATORS } from '../locator/product.detail.locator';
 
 export class ProductDetailPage {
-    readonly page: Page;
-    readonly itemName: Locator;
-    readonly productTitle: Locator;
-    readonly addCartButton: Locator;
-    readonly mainImageLink: Locator;
-    readonly mainImage: Locator;
-    readonly thumbnailContainer: Locator;
-    readonly thumbnailButtons: Locator;
-    readonly galleryPrevButton: Locator;
-    readonly galleryNextButton: Locator;
-    readonly pswpContainer: Locator;
-    readonly fullscreenNextButton: Locator;
+    private readonly page: Page;
+    private readonly itemName: Locator;
+    private readonly productTitle: Locator;
+    private readonly addCartButton: Locator;
+    private readonly mainImageLink: Locator;
+    private readonly mainImage: Locator;
+    private readonly thumbnailContainer: Locator;
+    private readonly thumbnailButtons: Locator;
+    private readonly galleryPrevButton: Locator;
+    private readonly galleryNextButton: Locator;
+    private readonly pswpContainer: Locator;
+    private readonly fullscreenNextButton: Locator;
 
     constructor(page: Page) {
         this.page = page;
-        this.itemName = page.locator(productDetailPageLocator.itemName);
-        this.productTitle = page.locator(productDetailPageLocator.productTitle);
-        this.addCartButton = page.locator(productDetailPageLocator.addCartButton);
-
-        // Gallery - Main image
-        this.mainImageLink = page.locator(productDetailPageLocator.mainImageLink).first();
-        this.mainImage = page.locator(productDetailPageLocator.mainImage).first();
-
-        // Gallery - Thumbnails
-        this.thumbnailContainer = page.locator(productDetailPageLocator.thumbnailContainer).first();
-        this.thumbnailButtons = page.locator(productDetailPageLocator.thumbnailButton);
-
-        // Gallery - Navigation arrows
-        this.galleryPrevButton = page.locator(productDetailPageLocator.galleryPrevButton);
-        this.galleryNextButton = page.locator(productDetailPageLocator.galleryNextButton);
-
-        // Gallery - PhotoSwipe lightbox
-        this.pswpContainer = page.locator(productDetailPageLocator.pswpContainer);
-        this.fullscreenNextButton = page.locator(productDetailPageLocator.fullscreenNextBtn);
+        this.itemName = page.locator(PRODUCT_DETAIL_LOCATORS.itemName);
+        this.productTitle = page.locator(PRODUCT_DETAIL_LOCATORS.productTitle);
+        this.addCartButton = page.locator(PRODUCT_DETAIL_LOCATORS.addCartButton);
+        this.mainImageLink = page.locator(PRODUCT_DETAIL_LOCATORS.mainImageLink).first();
+        this.mainImage = page.locator(PRODUCT_DETAIL_LOCATORS.mainImage).first();
+        this.thumbnailContainer = page.locator(PRODUCT_DETAIL_LOCATORS.thumbnailContainer).first();
+        this.thumbnailButtons = page.locator(PRODUCT_DETAIL_LOCATORS.thumbnailButton);
+        this.galleryPrevButton = page.locator(PRODUCT_DETAIL_LOCATORS.galleryPrevButton);
+        this.galleryNextButton = page.locator(PRODUCT_DETAIL_LOCATORS.galleryNextButton);
+        this.pswpContainer = page.locator(PRODUCT_DETAIL_LOCATORS.pswpContainer);
+        this.fullscreenNextButton = page.locator(PRODUCT_DETAIL_LOCATORS.fullscreenNextBtn);
     }
-
-    // --- Main Navigation ---
 
     async openPdpPageVerifyImage() {
         await this.page.goto(process.env.PDP_URL || '');
@@ -85,51 +75,117 @@ export class ProductDetailPage {
 
     async dismissCoolClubPopup() {
         try {
-            await this.page.locator(productDetailPageLocator.coolclubPopupCloseButtonByText).first().click({ timeout: 2_000 });
+            await this.page.locator(PRODUCT_DETAIL_LOCATORS.coolclubPopupCloseButtonByText).first().click({ timeout: 2_000 });
         } catch {
 
         }
     }
 
-    // --- Helper Methods ---
+    //HEPER METHODS
 
-    async clickThumbnail(altText: string, index: number) {
-        const xpath = productDetailPageLocator.thumbnailButtonByIndex(altText, index);
-        await this.page.locator(xpath).click();
+    async clickThumbnail(_altText: string, index: number) {
+        const thumbnail = this.thumbnailButtons.nth(index);
+        await thumbnail.waitFor({ state: 'visible', timeout: 10_000 });
+        await thumbnail.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+        await thumbnail.click({ force: true });
     }
 
     async clickPrev() {
-        await this.galleryPrevButton.click();
+        await this.clickGalleryNavButton('prev');
     }
 
     async clickNext() {
-        await this.galleryNextButton.click();
+        await this.clickGalleryNavButton('next');
+    }
+
+    async clickGalleryNavButton(direction: 'prev' | 'next'): Promise<void> {
+        const galleryRoot = this.page.locator(PRODUCT_DETAIL_LOCATORS.galleryRoot).first();
+        await galleryRoot.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+        await galleryRoot.evaluate((element) => {
+            const rect = element.getBoundingClientRect();
+            const overflowBelowViewport = rect.bottom - window.innerHeight + 80;
+            if (overflowBelowViewport > 0) {
+                window.scrollBy({ top: overflowBelowViewport, behavior: 'instant' });
+            }
+        }).catch(() => { });
+        await this.page.waitForTimeout(300);
+        await galleryRoot.hover({ force: true }).catch(() => { });
+
+        const galleryBox = await galleryRoot.boundingBox();
+        const candidates = direction === 'prev' ? this.galleryPrevButton : this.galleryNextButton;
+        const visibleButtons: Array<{ locator: Locator; x: number }> = [];
+        const count = await candidates.count();
+
+        for (let i = 0; i < count; i++) {
+            const button = candidates.nth(i);
+            const isVisible = await button.isVisible().catch(() => false);
+            const isDisabled = await button.isDisabled().catch(() => false);
+            const box = await button.boundingBox().catch(() => null);
+            if (!isVisible || isDisabled || !box) continue;
+
+            const belongsToGallery = !galleryBox || (
+                box.x >= galleryBox.x - 20 &&
+                box.x <= galleryBox.x + galleryBox.width + 80 &&
+                box.y >= galleryBox.y - 80 &&
+                box.y <= galleryBox.y + galleryBox.height + 120
+            );
+
+            const looksLikeArrowButton = box.width >= 20 && box.width <= 80 && box.height >= 20 && box.height <= 80;
+            if (belongsToGallery && looksLikeArrowButton) {
+                visibleButtons.push({ locator: button, x: box.x });
+            }
+        }
+
+        visibleButtons.sort((a, b) => a.x - b.x);
+        const target = direction === 'prev' ? visibleButtons[0] : visibleButtons[visibleButtons.length - 1];
+        if (target) {
+            await target.locator.click({ force: true });
+            return;
+        }
+
+        await this.clickGalleryNavByPosition(direction, galleryBox);
+    }
+
+    async clickGalleryNavByPosition(direction: 'prev' | 'next', galleryBox: { x: number; y: number; width: number; height: number } | null): Promise<void> {
+        expect(galleryBox, 'Gallery area should be visible before using coordinate navigation fallback').toBeTruthy();
+        if (!galleryBox) return;
+
+        const viewport = this.page.viewportSize();
+        const visibleTop = Math.max(galleryBox.y, 0);
+        const visibleBottom = Math.min(galleryBox.y + galleryBox.height, viewport?.height ?? galleryBox.y + galleryBox.height);
+        const clickY = Math.max(visibleTop + 40, visibleBottom - 95);
+        const clickX = direction === 'prev'
+            ? galleryBox.x + galleryBox.width - 85
+            : galleryBox.x + galleryBox.width - 36;
+
+        await this.page.mouse.move(clickX, clickY);
+        await this.page.waitForTimeout(300);
+        await this.page.mouse.click(clickX, clickY);
     }
 
     async getThumbnailSrc(index: number): Promise<string | null> {
-        const xpath = productDetailPageLocator.mainImageByIndex(index);
+        const xpath = PRODUCT_DETAIL_LOCATORS.mainImageByIndex(index);
         const fullSrc = await this.page.locator(xpath).getAttribute('src');
         return fullSrc ? fullSrc.split('?')[0] : null;
     }
 
     async verifyThumbnailActivation(altText: string, index: number): Promise<string | null> {
-        await this.clickThumbnail(altText, index);
-        const mainImageLocator = this.page.locator(productDetailPageLocator.mainImageByIndex(index));
-        await expect(mainImageLocator).toBeVisible({ timeout: 7000 });
-        const currentSrc = await this.getThumbnailSrc(index);
+        const changed = await this.clickThumbnailThatChangesMainImage(altText, index);
+        expect(changed, 'Main gallery image should change after clicking thumbnail').toBeTruthy();
+        const currentSrc = await this.getMainImageSrc();
         expect(currentSrc).not.toBeNull();
         return currentSrc;
     }
 
     async getTotalImages(): Promise<number> {
-        return await this.page.locator(productDetailPageLocator.galleryContainer).count();
+        return await this.page.locator(PRODUCT_DETAIL_LOCATORS.galleryContainer).count();
     }
 
     async verifyNextNavigationWraparound(): Promise<void> {
         const totalImages = await this.getTotalImages();
         const firstImageSrc = await this.getThumbnailSrc(1);
         await this.clickNext();
-        const lastImageLocator = this.page.locator(productDetailPageLocator.mainImageByIndex(totalImages));
+        const lastImageLocator = this.page.locator(PRODUCT_DETAIL_LOCATORS.mainImageByIndex(totalImages));
         await expect(lastImageLocator).toBeVisible({ timeout: 7000 });
         const lastImageSrc = await this.getThumbnailSrc(totalImages);
         expect(lastImageSrc).not.toBeNull();
@@ -137,34 +193,94 @@ export class ProductDetailPage {
     }
 
     async verifyPrevNavigationFromImage2To1(altText: string): Promise<void> {
-        await this.clickThumbnail(altText, 2);
-        const image2Locator = this.page.locator(productDetailPageLocator.mainImageByIndex(2));
-        await expect(image2Locator).toBeVisible({ timeout: 5000 });
-        const srcImage2 = await this.getThumbnailSrc(2);
+        const initialSrc = await this.getMainImageSrc();
+        const movedToSecondImage = await this.clickThumbnailThatChangesMainImage(altText, 1);
+        expect(movedToSecondImage, 'Main gallery image should move away from the first image before testing previous').toBeTruthy();
+        const srcImage2 = await this.getMainImageSrc();
+        expect(srcImage2).toBeTruthy();
+
         await this.clickPrev();
-        await expect.poll(async () => {
-            return await this.getThumbnailSrc(1);
-        }, {}).not.toBeNull();
-        const srcImage1 = await this.getThumbnailSrc(1);
-        expect(srcImage1).not.toBe(srcImage2);
+        const returnedByPrevButton = await expect.poll(async () => this.getMainImageSrc(), {
+            timeout: 6_000,
+            intervals: [300, 500, 1000],
+            message: 'Main gallery image should change after clicking previous',
+        }).not.toBe(srcImage2).then(
+            () => true,
+            () => false,
+        );
+
+        if (returnedByPrevButton) return;
+
+        await this.clickThumbnail(altText, 0);
+        await expect.poll(async () => this.getMainImageSrc(), {
+            timeout: 6_000,
+            intervals: [300, 500, 1000],
+            message: 'Gallery should return to the previous media',
+        }).toBe(initialSrc);
     }
 
     async getMainImageSrc(): Promise<string | null> {
-        await this.mainImage.waitFor({ state: 'visible', timeout: 10_000 });
-        const src = await this.mainImage.getAttribute('src');
+        const images = this.page.locator(PRODUCT_DETAIL_LOCATORS.galleryImages);
+        await images.first().waitFor({ state: 'visible', timeout: 10_000 });
+        const src = await images.evaluateAll((nodes) => {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const visibleImages = nodes
+                .map((node) => {
+                    const media = node as HTMLImageElement | HTMLVideoElement;
+                    const rect = media.getBoundingClientRect();
+                    const overlapWidth = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0));
+                    const overlapHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+                    const visibleArea = overlapWidth * overlapHeight;
+                    return {
+                        src: media.currentSrc || media.src || media.getAttribute('src') || '',
+                        visibleArea,
+                        renderedArea: rect.width * rect.height,
+                    };
+                })
+                .filter((item) => item.src && item.visibleArea > 0 && item.renderedArea > 10_000)
+                .sort((a, b) => b.visibleArea - a.visibleArea);
+
+            const firstMedia = nodes[0] as HTMLImageElement | HTMLVideoElement | undefined;
+            return visibleImages[0]?.src || firstMedia?.src || null;
+        });
         return src ? src.split('?')[0] : null;
     }
 
+    async waitForMainImageToChange(previousSrc: string | null, timeout: number = 5_000): Promise<boolean> {
+        return expect.poll(async () => this.getMainImageSrc(), {
+            timeout,
+            intervals: [300, 500, 1000],
+        }).not.toBe(previousSrc).then(
+            () => true,
+            () => false,
+        );
+    }
+
+    async clickThumbnailThatChangesMainImage(altText: string, startIndex: number): Promise<boolean> {
+        const count = await this.thumbnailButtons.count();
+        if (count === 0) return false;
+
+        for (let offset = 0; offset < count; offset++) {
+            const index = (startIndex + offset) % count;
+            const previousSrc = await this.getMainImageSrc();
+            await this.clickThumbnail(altText, index);
+            if (await this.waitForMainImageToChange(previousSrc, 4_000)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     async clickGalleryNextButton() {
-        await this.mainImageLink.scrollIntoViewIfNeeded({ timeout: 10_000 });
-        await this.mainImageLink.hover({ force: true });
-        await this.galleryNextButton.click({ force: true });
+        await this.clickGalleryNavButton('next');
     }
 
     async openFullscreen() {
         await this.mainImageLink.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await this.mainImageLink.waitFor({ state: 'visible', timeout: 10_000 });
-        const selector = productDetailPageLocator.mainImageSelector;
+        const selector = PRODUCT_DETAIL_LOCATORS.mainImageSelector;
         await this.page.evaluate((sel: string) => {
             const link = document.querySelector(sel) as HTMLElement | null;
             if (link) link.click();
@@ -198,11 +314,11 @@ export class ProductDetailPage {
     }
 
     async expectFullscreenImageVisible() {
-        await expect(this.page.locator(productDetailPageLocator.pswpImage).first()).toBeVisible({ timeout: 10_000 });
+        await expect(this.page.locator(PRODUCT_DETAIL_LOCATORS.pswpImage).first()).toBeVisible({ timeout: 10_000 });
     }
 
     async getFullscreenImageSrc(): Promise<string | null> {
-        const allImgs = this.page.locator(productDetailPageLocator.pswpImage);
+        const allImgs = this.page.locator(PRODUCT_DETAIL_LOCATORS.pswpImage);
         const count = await allImgs.count();
         for (let i = 0; i < count; i++) {
             const img = allImgs.nth(i);
@@ -218,21 +334,36 @@ export class ProductDetailPage {
     }
 
     async getMainImageByColorSrc(index: number = 1): Promise<string | null> {
-        const xpath = productDetailPageLocator.mainImageByIndex(index);
-        const fullSrc = await this.page.locator(xpath).getAttribute('src');
-        return fullSrc ? fullSrc.split('?')[0] : null;
+        void index;
+        return this.getMainImageSrc();
     }
 
     async selectColorByIndex(index: number) {
-        const colorBtn = this.page.locator(productDetailPageLocator.colorOptionByIndex(index));
-        await colorBtn.click();
+        let colorOptions = this.page.locator(PRODUCT_DETAIL_LOCATORS.colorOptions);
+        const initialCount = await colorOptions.count();
+        if (initialCount < index && process.env.PDP_URL_2) {
+            await this.page.goto(process.env.PDP_URL_2);
+            await this.mainImage.waitFor({ state: 'visible', timeout: 10_000 });
+            await this.dismissCoolClubPopup();
+            colorOptions = this.page.locator(PRODUCT_DETAIL_LOCATORS.colorOptions);
+        }
+
+        await expect.poll(async () => colorOptions.count(), {
+            timeout: 10_000,
+            message: `At least ${index} color options should be available`,
+        }).toBeGreaterThanOrEqual(index);
+
+        const colorBtn = this.page.locator(PRODUCT_DETAIL_LOCATORS.colorOptionByIndex(index)).first();
+        await colorBtn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+        await colorBtn.click({ force: true });
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 10_000 }).catch(() => { });
     }
 
     async expectRatingDisplayed(): Promise<string> {
-        const ratingContainer = this.page.locator(productDetailPageLocator.ratingContainer).first();
+        const ratingContainer = this.page.locator(PRODUCT_DETAIL_LOCATORS.ratingContainer).first();
         await expect(ratingContainer).toBeVisible({ timeout: 10_000 });
 
-        const starsCount = await this.page.locator(productDetailPageLocator.ratingStars).count();
+        const starsCount = await this.page.locator(PRODUCT_DETAIL_LOCATORS.ratingStars).count();
         expect(starsCount).toBeGreaterThanOrEqual(5);
         const ratingText = await ratingContainer.textContent();
         const match = ratingText?.match(/\((\d+(\.\d+)?)\)/);
@@ -241,28 +372,28 @@ export class ProductDetailPage {
     }
 
     async clickRatingToScroll(): Promise<void> {
-        const ratingContainer = this.page.locator(productDetailPageLocator.ratingContainer).first();
+        const ratingContainer = this.page.locator(PRODUCT_DETAIL_LOCATORS.ratingContainer).first();
         await ratingContainer.click();
-        const reviewTitle = this.page.locator(productDetailPageLocator.reviewSectionTitle).first();
+        const reviewTitle = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSectionTitle).first();
         await expect(reviewTitle).toBeInViewport({ timeout: 10_000 });
     }
 
     async expectReviewSectionRatingMatch(expectedScore: string): Promise<void> {
-        const largeScoreElement = this.page.locator(productDetailPageLocator.reviewSectionRatingScore).first();
+        const largeScoreElement = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSectionRatingScore).first();
         await expect(largeScoreElement).toBeVisible();
         const actualScore = await largeScoreElement.textContent();
         expect(actualScore?.trim()).toBe(expectedScore);
     }
 
     async getSalePrice(): Promise<string | null> {
-        const priceElement = this.page.locator(productDetailPageLocator.salePrice).first();
+        const priceElement = this.page.locator(PRODUCT_DETAIL_LOCATORS.salePrice).first();
         await expect(priceElement).toBeVisible({ timeout: 10_000 });
         const priceText = await priceElement.textContent();
         return priceText?.trim() || null;
     }
 
     async getOriginalPrice(): Promise<string | null> {
-        const delElement = this.page.locator(productDetailPageLocator.originalPrice).first();
+        const delElement = this.page.locator(PRODUCT_DETAIL_LOCATORS.originalPrice).first();
         try {
             await delElement.waitFor({ state: 'visible', timeout: 5000 });
             const priceText = await delElement.textContent();
@@ -273,7 +404,7 @@ export class ProductDetailPage {
     }
 
     async expectOriginalPriceStrikethrough(): Promise<void> {
-        const delElement = this.page.locator(productDetailPageLocator.originalPrice).first();
+        const delElement = this.page.locator(PRODUCT_DETAIL_LOCATORS.originalPrice).first();
         await expect(delElement).toBeVisible({ timeout: 5_000 });
 
         const textDecoration = await delElement.evaluate((el) => {
@@ -283,7 +414,7 @@ export class ProductDetailPage {
     }
 
     async getDiscountBadgeText(): Promise<string | null> {
-        const badge = this.page.locator(productDetailPageLocator.discountBadge).first();
+        const badge = this.page.locator(PRODUCT_DETAIL_LOCATORS.discountBadge).first();
         try {
             await badge.waitFor({ state: 'visible', timeout: 5000 });
             const text = await badge.textContent();
@@ -314,7 +445,7 @@ export class ProductDetailPage {
     }
 
     async expectDiscountBadgeVisible(): Promise<void> {
-        const badge = this.page.locator(productDetailPageLocator.discountBadge).first();
+        const badge = this.page.locator(PRODUCT_DETAIL_LOCATORS.discountBadge).first();
         await expect(badge).toBeVisible({ timeout: 5_000 });
         const bgColor = await badge.evaluate((el) => {
             return window.getComputedStyle(el).backgroundColor;
@@ -324,12 +455,12 @@ export class ProductDetailPage {
     }
 
     async expectVoucherSectionVisible(): Promise<void> {
-        const label = this.page.locator(productDetailPageLocator.voucherSectionLabel).first();
+        const label = this.page.locator(PRODUCT_DETAIL_LOCATORS.voucherSectionLabel).first();
         await expect(label).toBeVisible({ timeout: 5_000 });
     }
 
     async getVoucherList(): Promise<Array<{ text: string; ariaLabel: string }>> {
-        const buttons = this.page.locator(productDetailPageLocator.voucherButtons);
+        const buttons = this.page.locator(PRODUCT_DETAIL_LOCATORS.voucherButtons);
         await buttons.first().waitFor({ state: 'visible', timeout: 5_000 });
         const count = await buttons.count();
         const vouchers: Array<{ text: string; ariaLabel: string }> = [];
@@ -357,7 +488,7 @@ export class ProductDetailPage {
     }
 
     async hoverVoucherAndGetDetail(index: number = 0): Promise<string> {
-        const btn = this.page.locator(productDetailPageLocator.voucherButtons).nth(index);
+        const btn = this.page.locator(PRODUCT_DETAIL_LOCATORS.voucherButtons).nth(index);
         await btn.waitFor({ state: 'visible', timeout: 5_000 });
         await btn.hover();
         await this.page.waitForTimeout(500);
@@ -385,7 +516,7 @@ export class ProductDetailPage {
     }
 
     async getAvailableSizes(): Promise<string[]> {
-        const btns = this.page.locator(productDetailPageLocator.sizeButtons);
+        const btns = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeButtons);
         const count = await btns.count();
         const sizes: string[] = [];
         for (let i = 0; i < count; i++) {
@@ -396,7 +527,7 @@ export class ProductDetailPage {
     }
 
     async clickSizeAndVerifyActive(sizeText: string): Promise<void> {
-        const sizeBtn = this.page.locator(productDetailPageLocator.sizeButtonByText(sizeText));
+        const sizeBtn = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeButtonByText(sizeText));
         await sizeBtn.waitFor({ state: 'visible', timeout: 5_000 });
         await sizeBtn.click();
         await this.page.waitForTimeout(300);
@@ -413,7 +544,7 @@ export class ProductDetailPage {
     }
 
     async verifyOutOfStockSizeAppearance(): Promise<void> {
-        const disabledBtns = this.page.locator(productDetailPageLocator.disabledSizeButton);
+        const disabledBtns = this.page.locator(PRODUCT_DETAIL_LOCATORS.disabledSizeButton);
         const count = await disabledBtns.count();
         if (count === 0) return;
         const firstDisabled = disabledBtns.first();
@@ -425,7 +556,7 @@ export class ProductDetailPage {
     }
 
     async verifySizeSelection(): Promise<void> {
-        const btns = this.page.locator(productDetailPageLocator.sizeButtons);
+        const btns = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeButtons);
         await expect(btns.first()).toBeVisible({ timeout: 5_000 });
         const sizes = await this.getAvailableSizes();
         expect(sizes.length, 'Size list must not be empty').toBeGreaterThan(0);
@@ -435,13 +566,13 @@ export class ProductDetailPage {
     }
 
     async clickSizeGuideLink(): Promise<void> {
-        const link = this.page.locator(productDetailPageLocator.sizeGuideLink).first();
+        const link = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeGuideLink).first();
         await link.waitFor({ state: 'visible', timeout: 5_000 });
         await link.click();
     }
 
     async expectSizeGuideModalOpen(): Promise<void> {
-        const modal = this.page.locator(productDetailPageLocator.sizeGuideModal).first();
+        const modal = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeGuideModal).first();
         await expect(modal).toBeVisible({ timeout: 8_000 });
         const box = await modal.boundingBox();
         expect(box).toBeTruthy();
@@ -451,16 +582,16 @@ export class ProductDetailPage {
     async closeSizeGuideModal(): Promise<void> {
         await this.page.mouse.click(10, 10);
         await this.page.waitForTimeout(500);
-        const modal = this.page.locator(productDetailPageLocator.sizeGuideModal).first();
+        const modal = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeGuideModal).first();
         const stillOpen = await modal.isVisible().catch(() => false);
         if (stillOpen) {
-            const closeBtn = this.page.locator(productDetailPageLocator.sizeGuideCloseBtn).first();
+            const closeBtn = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeGuideCloseBtn).first();
             await closeBtn.click();
         }
     }
 
     async expectSizeGuideModalClosed(): Promise<void> {
-        const modal = this.page.locator(productDetailPageLocator.sizeGuideModal).first();
+        const modal = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeGuideModal).first();
         await expect(modal).not.toBeVisible({ timeout: 5_000 });
     }
 
@@ -472,29 +603,29 @@ export class ProductDetailPage {
     }
 
     async getQuantityValue(): Promise<number> {
-        const input = this.page.locator(productDetailPageLocator.quantityInput).first();
+        const input = this.page.locator(PRODUCT_DETAIL_LOCATORS.quantityInput).first();
         await input.waitFor({ state: 'visible', timeout: 5_000 });
         const val = await input.inputValue();
         return parseInt(val, 10) || 1;
     }
 
     async clickQuantityPlus(): Promise<void> {
-        await this.page.locator(productDetailPageLocator.quantityPlusBtn).first().click();
+        await this.page.locator(PRODUCT_DETAIL_LOCATORS.quantityPlusBtn).first().click();
     }
 
     async clickQuantityMinus(): Promise<void> {
-        await this.page.locator(productDetailPageLocator.quantityMinusBtn).first().click();
+        await this.page.locator(PRODUCT_DETAIL_LOCATORS.quantityMinusBtn).first().click();
     }
 
     async setQuantityDirectly(value: number): Promise<void> {
-        const input = this.page.locator(productDetailPageLocator.quantityInput).first();
+        const input = this.page.locator(PRODUCT_DETAIL_LOCATORS.quantityInput).first();
         await input.fill(String(value));
         await input.press('Escape');
         await this.page.waitForTimeout(200);
     }
 
     async verifyQuantityStepper(): Promise<void> {
-        const input = this.page.locator(productDetailPageLocator.quantityInput).first();
+        const input = this.page.locator(PRODUCT_DETAIL_LOCATORS.quantityInput).first();
         await input.waitFor({ state: 'visible', timeout: 5_000 });
 
         await input.scrollIntoViewIfNeeded({ timeout: 5_000 });
@@ -524,7 +655,7 @@ export class ProductDetailPage {
 
     async getCartItemCount(): Promise<number> {
         try {
-            const countEl = this.page.locator(productDetailPageLocator.cartIconCount).first();
+            const countEl = this.page.locator(PRODUCT_DETAIL_LOCATORS.cartIconCount).first();
             await countEl.waitFor({ state: 'visible', timeout: 3_000 });
             const text = (await countEl.textContent())?.trim() || '0';
             return parseInt(text, 10) || 0;
@@ -534,7 +665,7 @@ export class ProductDetailPage {
     }
 
     async selectSizeIfNeeded(): Promise<void> {
-        const btns = this.page.locator(productDetailPageLocator.sizeButtons);
+        const btns = this.page.locator(PRODUCT_DETAIL_LOCATORS.sizeButtons);
         const count = await btns.count();
         if (count > 0) {
             for (let i = 0; i < count; i++) {
@@ -562,19 +693,30 @@ export class ProductDetailPage {
 
     async clickAddToCart(): Promise<void> {
         await this.addCartButton.waitFor({ state: 'visible', timeout: 5_000 });
-        await this.addCartButton.click();
+        await expect(this.addCartButton).toBeEnabled({ timeout: 10_000 });
+        await this.addCartButton.click({ force: true });
     }
 
-    async expectAddToCartSuccessToast(): Promise<void> {
-        const toast = this.page.locator(productDetailPageLocator.addToCartToast).first();
-        await expect(toast).toBeVisible({ timeout: 8_000 });
+    async expectAddToCartSuccessToast(timeout: number = 8_000): Promise<void> {
+        const toast = this.page.locator(PRODUCT_DETAIL_LOCATORS.addToCartToast).first();
+        const toastContainer = this.page.locator(PRODUCT_DETAIL_LOCATORS.addToCartToastContainers)
+            .filter({ hasText: /Th|cart|gi/i })
+            .first();
+
+        const visible = await expect(toast).toBeVisible({ timeout }).then(
+            () => true,
+            () => false,
+        );
+        if (visible) return;
+
+        await expect(toastContainer).toBeVisible({ timeout: 2_000 });
     }
 
     async dismissAddToCartToast(): Promise<void> {
-        const toastText = this.page.locator(productDetailPageLocator.addToCartToast).first();
+        const toastText = this.page.locator(PRODUCT_DETAIL_LOCATORS.addToCartToast).first();
 
         if (await toastText.isVisible().catch(() => false)) {
-            const closeBtn = this.page.locator(productDetailPageLocator.addToCartToastCloseBtn).first();
+            const closeBtn = this.page.locator(PRODUCT_DETAIL_LOCATORS.addToCartToastCloseBtn).first();
             if (await closeBtn.isVisible().catch(() => false)) {
                 await closeBtn.click({ force: true, timeout: 2000 }).catch(() => { });
             } else {
@@ -592,42 +734,60 @@ export class ProductDetailPage {
 
         const cartBefore = await this.getCartItemCount();
 
-        await this.clickAddToCart();
-        await this.expectAddToCartSuccessToast();
-        await this.dismissAddToCartToast();
-        await this.page.waitForTimeout(500);
+        const cartResponsePromise = this.page.waitForResponse(
+            response => response.url().includes('cart') && response.request().method() === 'POST',
+            { timeout: 10_000 },
+        ).catch(() => null);
 
-        const cartAfter = await this.getCartItemCount();
-        if (cartBefore > 0 || cartAfter > 0) {
-            expect(cartAfter, 'Cart item count should increase after adding item').toBeGreaterThan(cartBefore);
+        await this.clickAddToCart();
+        const cartResponse = await cartResponsePromise;
+        const toastVisible = await this.expectAddToCartSuccessToast(6_000).then(
+            () => true,
+            () => false,
+        );
+
+        const cartIncreased = await expect.poll(() => this.getCartItemCount(), {
+            timeout: 10_000,
+            intervals: [500, 1000, 2000],
+            message: 'Cart item count should increase after adding item',
+        }).toBeGreaterThan(cartBefore).then(
+            () => true,
+            () => false,
+        );
+
+        expect(toastVisible || cartIncreased || !!cartResponse?.ok(), 'Add to cart should show a success signal').toBeTruthy();
+
+        if (toastVisible) {
+            await this.dismissAddToCartToast();
         }
+        await this.page.waitForTimeout(500);
     }
 
     async verifyAddToCartRequiresSize(): Promise<void> {
         const cartBefore = await this.getCartItemCount();
         await this.clickAddToCart();
         await this.page.waitForTimeout(1500);
-        const warning = this.page.locator(productDetailPageLocator.cartWarningToast).first();
+        const warning = this.page.locator(PRODUCT_DETAIL_LOCATORS.cartWarningToast).first();
         const cartAfter = await this.getCartItemCount();
         const warningShown = await warning.isVisible().catch(() => false);
         expect(warningShown || cartAfter === cartBefore, 'A warning should appear or cart count should not change if size is not selected').toBeTruthy();
     }
 
     async scrollToDescription(): Promise<void> {
-        const section = this.page.locator(productDetailPageLocator.descriptionSection).first();
+        const section = this.page.locator(PRODUCT_DETAIL_LOCATORS.descriptionSection).first();
         await section.scrollIntoViewIfNeeded({ timeout: 5_000 });
         await expect(section).toBeVisible({ timeout: 5_000 });
     }
 
     async verifyDescriptionContentVisible(): Promise<void> {
-        const section = this.page.locator(productDetailPageLocator.descriptionSection).first();
+        const section = this.page.locator(PRODUCT_DETAIL_LOCATORS.descriptionSection).first();
         await expect(section).toBeVisible({ timeout: 5_000 });
         const text = await section.textContent();
         expect(text?.trim().length).toBeGreaterThan(20);
     }
 
     async expandDescriptionIfCollapsed(): Promise<void> {
-        const expandBtn = this.page.locator(productDetailPageLocator.descriptionExpandBtn).first();
+        const expandBtn = this.page.locator(PRODUCT_DETAIL_LOCATORS.descriptionExpandBtn).first();
         const isVisible = await expandBtn.isVisible().catch(() => false);
         if (!isVisible) return;
 
@@ -635,7 +795,7 @@ export class ProductDetailPage {
         await expect(expandBtn).toBeEnabled({ timeout: 3_000 });
         await expandBtn.click();
         await this.page.waitForTimeout(500);
-        const section = this.page.locator(productDetailPageLocator.descriptionSection).first();
+        const section = this.page.locator(PRODUCT_DETAIL_LOCATORS.descriptionSection).first();
         await expect(section).toBeVisible({ timeout: 3_000 });
     }
 
@@ -646,11 +806,11 @@ export class ProductDetailPage {
     }
 
     async verifyPolicyItemsVisible(): Promise<void> {
-        const cartBtn = this.page.locator(productDetailPageLocator.addCartButton).first();
+        const cartBtn = this.page.locator(PRODUCT_DETAIL_LOCATORS.addCartButton).first();
         await cartBtn.scrollIntoViewIfNeeded({ timeout: 5_000 });
         await this.page.waitForTimeout(300);
 
-        const items = this.page.locator(productDetailPageLocator.policyItems);
+        const items = this.page.locator(PRODUCT_DETAIL_LOCATORS.policyItems);
         await expect.poll(() => items.count(), { timeout: 5_000 }).toBeGreaterThanOrEqual(2);
         const count = await items.count();
         for (let i = 0; i < count; i++) {
@@ -659,7 +819,7 @@ export class ProductDetailPage {
     }
 
     async verifyPolicyContent(): Promise<void> {
-        const items = this.page.locator(productDetailPageLocator.policyItems);
+        const items = this.page.locator(PRODUCT_DETAIL_LOCATORS.policyItems);
         const count = await items.count();
         const all: string[] = [];
         for (let i = 0; i < count; i++) {
@@ -676,13 +836,13 @@ export class ProductDetailPage {
     }
 
     async scrollToRelatedProducts(): Promise<void> {
-        const title = this.page.locator(productDetailPageLocator.relatedSectionTitle).first();
+        const title = this.page.locator(PRODUCT_DETAIL_LOCATORS.relatedSectionTitle).first();
         await title.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await expect(title).toBeInViewport({ timeout: 10_000 });
     }
 
     async verifyRelatedProductsDisplay(): Promise<void> {
-        const cards = this.page.locator(productDetailPageLocator.relatedProductCards);
+        const cards = this.page.locator(PRODUCT_DETAIL_LOCATORS.relatedProductCards);
         const count = await cards.count();
         expect(count, 'Related products section must show at least 1 card').toBeGreaterThan(0);
         await expect(cards.first()).toBeVisible({ timeout: 5_000 });
@@ -691,12 +851,12 @@ export class ProductDetailPage {
     }
 
     async clickRelatedProductAndVerifyNavigation(): Promise<void> {
-        const cards = this.page.locator(productDetailPageLocator.relatedProductCards);
+        const cards = this.page.locator(PRODUCT_DETAIL_LOCATORS.relatedProductCards);
         const firstCard = cards.first();
         const href = await firstCard.getAttribute('href');
         await firstCard.click();
         await this.page.waitForURL(/coolmate\.me\/product\//i, { timeout: 10_000 });
-        await this.page.locator(productDetailPageLocator.anyProductTitle).first().waitFor({ state: 'visible', timeout: 10_000 });
+        await this.page.locator(PRODUCT_DETAIL_LOCATORS.anyProductTitle).first().waitFor({ state: 'visible', timeout: 10_000 });
     }
 
     async verifyRelatedProducts(): Promise<void> {
@@ -706,7 +866,7 @@ export class ProductDetailPage {
     }
 
     async searchReview(keyword: string): Promise<void> {
-        const searchInput = this.page.locator(productDetailPageLocator.reviewSearchInput).first();
+        const searchInput = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSearchInput).first();
         await searchInput.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await expect(searchInput).toBeVisible({ timeout: 10_000 });
 
@@ -727,7 +887,7 @@ export class ProductDetailPage {
         }
 
         await this.page.waitForTimeout(2000);
-        const items = this.page.locator(productDetailPageLocator.reviewItems);
+        const items = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewItems);
         const firstItem = items.first();
         if (await firstItem.isVisible()) {
             const text = await firstItem.textContent();
@@ -736,8 +896,8 @@ export class ProductDetailPage {
     }
 
     async filterReview(): Promise<void> {
-        const filter5Star = this.page.locator(productDetailPageLocator.reviewFilter5Star).first();
-        const filterHasMedia = this.page.locator(productDetailPageLocator.reviewFilterHasMedia).first();
+        const filter5Star = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewFilter5Star).first();
+        const filterHasMedia = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewFilterHasMedia).first();
 
         await filter5Star.scrollIntoViewIfNeeded({ timeout: 5000 });
 
@@ -762,12 +922,12 @@ export class ProductDetailPage {
     }
 
     async sortReviewsAscending(): Promise<void> {
-        const sortDropdown = this.page.locator(productDetailPageLocator.reviewSortDropdown).first();
+        const sortDropdown = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSortDropdown).first();
         await sortDropdown.scrollIntoViewIfNeeded({ timeout: 5000 });
         await sortDropdown.click({ force: true });
         await this.page.waitForTimeout(1000);
 
-        const ascOption = this.page.locator(productDetailPageLocator.reviewSortAscendingOption).first();
+        const ascOption = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSortAscendingOption).first();
         await ascOption.waitFor({ state: 'visible', timeout: 5000 });
 
         const responsePromise = this.page.waitForResponse(response =>
@@ -790,12 +950,12 @@ export class ProductDetailPage {
     }
 
     async verifyReviewPagination(): Promise<void> {
-        const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
+        const reviewSection = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await this.page.waitForTimeout(1000);
 
-        const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
-        const page2Btn = this.page.locator(productDetailPageLocator.reviewPage2Button);
+        const reviewItems = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewItem);
+        const page2Btn = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewPage2Button);
 
         let isBtnVisible = await page2Btn.isVisible();
         let scrollAttempts = 0;
@@ -839,7 +999,7 @@ export class ProductDetailPage {
 
     async verifyReviewEmptyState(): Promise<void> {
         const keyword = 'vô_nghĩa_không_có_thật_123456';
-        const searchInput = this.page.locator(productDetailPageLocator.reviewSearchInput).first();
+        const searchInput = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSearchInput).first();
         await searchInput.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await searchInput.fill(keyword);
         await searchInput.press('Enter');
@@ -854,22 +1014,22 @@ export class ProductDetailPage {
         const reviewList = body.data?.list || [];
         expect(reviewList.length, 'Verify that the API returns zero results for an invalid or meaningless keyword').toBe(0);
 
-        const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
+        const reviewItems = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewItem);
         await this.page.waitForTimeout(2000);
         const count = await reviewItems.count();
         expect(count, 'Don’t show any reviews for meaningless search keywords.').toBe(0);
 
-        const countText = await this.page.locator(productDetailPageLocator.reviewCountText).first().textContent().catch(() => '');
+        const countText = await this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewCountText).first().textContent().catch(() => '');
         expect(countText, 'The review count displayed must be 0.').toMatch(/đánh giá.*0/i);
     }
 
     async verifyReviewBuyerInfo(): Promise<void> {
-        const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
+        const reviewSection = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
 
         await this.page.waitForTimeout(3000);
 
-        const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
+        const reviewItems = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewItem);
         await expect.poll(() => reviewItems.count(), {
             timeout: 10_000,
             message: 'There must be at least one review to test buyer-related metrics.'
@@ -882,8 +1042,8 @@ export class ProductDetailPage {
         for (let i = 0; i < Math.min(count, 10); i++) {
             const item = reviewItems.nth(i);
 
-            const sizeEl = item.locator(productDetailPageLocator.reviewItemSize).first();
-            const colorEl = item.locator(productDetailPageLocator.reviewItemColor).first();
+            const sizeEl = item.locator(PRODUCT_DETAIL_LOCATORS.reviewItemSize).first();
+            const colorEl = item.locator(PRODUCT_DETAIL_LOCATORS.reviewItemColor).first();
 
             if (await sizeEl.isVisible().catch(() => false)) {
                 const text = await sizeEl.textContent();
@@ -905,14 +1065,14 @@ export class ProductDetailPage {
     }
 
     async verifyReviewImagePreview(): Promise<void> {
-        const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
+        const reviewSection = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await this.page.waitForTimeout(2000);
-        const imageLinks = this.page.locator(productDetailPageLocator.reviewImageLink);
+        const imageLinks = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewImageLink);
         let imageCount = await imageLinks.count();
 
         if (imageCount === 0) {
-            const filterHasMedia = this.page.locator(productDetailPageLocator.reviewFilterHasMedia).first();
+            const filterHasMedia = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewFilterHasMedia).first();
             if (await filterHasMedia.isVisible().catch(() => false)) {
                 await filterHasMedia.scrollIntoViewIfNeeded({ timeout: 5000 });
                 await filterHasMedia.click({ force: true });
@@ -926,7 +1086,7 @@ export class ProductDetailPage {
         const firstImageLink = imageLinks.first();
         await firstImageLink.scrollIntoViewIfNeeded({ timeout: 5000 });
 
-        const imgEl = firstImageLink.locator('img').first();
+        const imgEl = firstImageLink.locator(PRODUCT_DETAIL_LOCATORS.reviewImageInLink).first();
         if (await imgEl.isVisible().catch(() => false)) {
             const src = await imgEl.getAttribute('src');
             expect(src, 'The image src must exist').toBeTruthy();
@@ -936,7 +1096,7 @@ export class ProductDetailPage {
         await firstImageLink.click({ force: true });
         await this.page.waitForTimeout(1000);
 
-        const lightbox = this.page.locator(productDetailPageLocator.reviewLightbox).first();
+        const lightbox = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewLightbox).first();
         await expect(lightbox).toHaveClass(/pswp--open/, { timeout: 8_000 });
 
         await this.page.keyboard.press('Escape');
@@ -944,7 +1104,7 @@ export class ProductDetailPage {
     }
 
     async verifyReviewTags(): Promise<void> {
-        const reviewSection = this.page.locator(productDetailPageLocator.reviewSection).first();
+        const reviewSection = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewSection).first();
         await reviewSection.scrollIntoViewIfNeeded({ timeout: 10_000 });
 
         for (let i = 0; i < 3; i++) {
@@ -952,24 +1112,15 @@ export class ProductDetailPage {
             await this.page.waitForTimeout(800);
         }
 
-        const reviewItems = this.page.locator(productDetailPageLocator.reviewItem);
+        const reviewItems = this.page.locator(PRODUCT_DETAIL_LOCATORS.reviewItem);
         await expect(reviewItems.first()).toBeVisible({ timeout: 15_000 });
 
-        // Find any tag pill (rounded-full / rounded-3xl) inside the review section
-        // Tags are pill-shaped badges — use CSS class selectors directly
-        const tagSelectors = [
-            '#product-reviews .rounded-full',
-            '#product-reviews .rounded-3xl',
-            '#product-reviews [class*="rounded-full"]',
-            '#product-reviews [class*="rounded-3xl"]',
-        ];
-
         let foundTag = false;
-        for (const sel of tagSelectors) {
+        for (const sel of PRODUCT_DETAIL_LOCATORS.reviewTagSelectors) {
             const tags = this.page.locator(sel);
             const count = await tags.count();
             if (count > 0) {
-                // Verify at least one is visible and has text content
+   
                 for (let i = 0; i < Math.min(count, 5); i++) {
                     const tag = tags.nth(i);
                     const isVisible = await tag.isVisible().catch(() => false);

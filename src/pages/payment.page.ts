@@ -21,23 +21,23 @@ export type PaymentGatewayOrderContext = {
 };
 
 export class PaymentPage {
-  readonly page: Page;
-  readonly paymentSectionTitle: Locator;
-  readonly paymentSection: Locator;
-  readonly submitOrderButton: Locator;
-  readonly gatewayBody: Locator;
-  readonly gatewayQrVisual: Locator;
-  readonly gatewayCancelButton: Locator;
-  readonly gatewayPaymentButton: Locator;
-  readonly cancelDialog: Locator;
-  readonly cancelDialogCloseButton: Locator;
-  readonly cancelDialogConfirmButton: Locator;
-  readonly cardInput: Locator;
-  readonly cardExpiryInput: Locator;
-  readonly cardCvvInput: Locator;
-  readonly cardPayButton: Locator;
-  readonly cardValidationMessage: Locator;
-  readonly failureNavigation: Locator;
+  private readonly page: Page;
+  private readonly paymentSectionTitle: Locator;
+  private readonly paymentSection: Locator;
+  private readonly submitOrderButton: Locator;
+  private readonly gatewayBody: Locator;
+  private readonly gatewayQrVisual: Locator;
+  private readonly gatewayCancelButton: Locator;
+  private readonly gatewayPaymentButton: Locator;
+  private readonly cancelDialog: Locator;
+  private readonly cancelDialogCloseButton: Locator;
+  private readonly cancelDialogConfirmButton: Locator;
+  private readonly cardInput: Locator;
+  private readonly cardExpiryInput: Locator;
+  private readonly cardCvvInput: Locator;
+  private readonly cardPayButton: Locator;
+  private readonly cardValidationMessage: Locator;
+  private readonly failureNavigation: Locator;
 
   static async openCheckoutWithProduct(page: Page): Promise<PaymentCheckoutContext> {
     const cartPage = new CartPage(page);
@@ -67,9 +67,17 @@ export class PaymentPage {
     await loginPage.login(process.env.USER_NAME!, process.env.PASS_WORD!);
     await loginPage.verifyLoginSuccess();
 
+    await PaymentPage.clearExistingCart(page);
+
     const result = await PaymentPage.openCheckoutWithProduct(page);
     await PaymentPage.ensureCheckoutReadyForOrder(result.checkout);
     return result;
+  }
+
+  static async clearExistingCart(page: Page): Promise<void> {
+    const checkout = new CheckoutPage(page);
+    await checkout.openCart();
+    await checkout.removeAllProducts();
   }
 
   static async ensureCheckoutReadyForOrder(checkout: CheckoutPage): Promise<void> {
@@ -268,8 +276,13 @@ export class PaymentPage {
   }
 
   async expectGatewayPageLoaded(): Promise<void> {
-    const bodyText = await this.getBodyText();
-    expect(bodyText.length, 'Gateway page should render visible content').toBeGreaterThan(10);
+    await expect
+      .poll(async () => (await this.getBodyText()).trim().length, {
+        timeout: 45_000,
+        intervals: [500, 1_000, 2_000, 3_000, 5_000],
+        message: 'Gateway page should render visible content',
+      })
+      .toBeGreaterThan(10);
   }
 
   async expectGatewayOrderInfoVisible(): Promise<void> {
