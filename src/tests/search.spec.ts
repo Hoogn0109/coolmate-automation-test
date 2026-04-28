@@ -1,6 +1,12 @@
-import { test, expect } from '../fixtures/auth.fixture';
+import { test } from '../fixtures/auth.fixture';
 import { SearchPage } from '../pages/search.page';
 import { searchData } from '../data/search.data';
+
+type ResultSearchCase = (typeof searchData.resultSearchCases)[number];
+type EmptyKeywordCase = (typeof searchData.emptyKeywordCases)[number];
+type NoResultSearchCase = (typeof searchData.noResultSearchCases)[number];
+type SpotlightCase = (typeof searchData.spotlightCases)[number];
+type SocialRedirectionCase = (typeof searchData.socialRedirectionCases)[number];
 
 test.describe('@search Search Product Test', () => {
 
@@ -13,131 +19,59 @@ test.describe('@search Search Product Test', () => {
     });
   });
 
-  // @TmsLink TC_SEARCH_002
-  test('TC_SEARCH_002: Verify search with valid keyword using enter key', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
+  for (const scenario of searchData.resultSearchCases) {
+    test(`${scenario.tmsId}: ${scenario.title}`, async ({ authPage: page }) => {
+      const searchPage = new SearchPage(page);
 
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
+      await test.step(`1. ${scenario.step}`, async () => {
+        await executeSearch(searchPage, scenario);
+      });
+
+      await test.step('2. Verify header Result Search visible', async () => {
+        await searchPage.verifyResultVisible();
+      });
+
+      await test.step('3. Verify result product visible', async () => {
+        await searchPage.verifyResultProductVisible();
+      });
+
+      await test.step('4. Verify view all button visible', async () => {
+        await searchPage.verifyViewAllButtonVisible();
+      });
     });
+  }
 
-    await test.step('2. Verify header Result Search visible', async () => {
-      await searchPage.verifyResultVisible();
+  for (const scenario of searchData.emptyKeywordCases) {
+    test(`${scenario.tmsId}: ${scenario.title}`, async ({ authPage: page }) => {
+      const searchPage = new SearchPage(page);
+
+      await test.step(`1. ${scenario.step}`, async () => {
+        await executeSearch(searchPage, scenario);
+      });
+
+      await test.step('2. Verify trending keyword visible', async () => {
+        await searchPage.verifyTrendingKeywordVisible();
+      });
     });
+  }
 
-    await test.step('3. Verify result product visible', async () => {
-      await searchPage.verifyResultProductVisible();
+  for (const scenario of searchData.noResultSearchCases) {
+    test(`${scenario.tmsId}: ${scenario.title}`, async ({ authPage: page }) => {
+      const searchPage = new SearchPage(page);
+
+      await test.step(`1. ${scenario.step}`, async () => {
+        await executeSearch(searchPage, scenario);
+      });
+
+      await test.step('2. Verify text no result product visible', async () => {
+        await searchPage.verifyTextNoResultProductVisible();
+      });
+
+      await test.step('3. Verify no result product visible', async () => {
+        await searchPage.verifyNoResultProduct();
+      });
     });
-
-    await test.step('4. Verify view all button visible', async () => {
-      await searchPage.verifyViewAllButtonVisible();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_003
-  test('TC_SEARCH_003: Verify search with valid keyword using search button', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingSearchButton(searchData.validSearch);
-    });
-
-    await test.step('2. Verify header Result Search visible', async () => {
-      await searchPage.verifyResultVisible();
-    });
-
-    await test.step('3. Verify result product visible', async () => {
-      await searchPage.verifyResultProductVisible();
-    });
-
-    await test.step('4. Verify view all button visible', async () => {
-      await searchPage.verifyViewAllButtonVisible();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_004
-  test('TC_SEARCH_004: Verify search with empty keyword', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with empty keyword', async () => {
-      await searchPage.searchWithEmpty(searchData.emptySearch);
-    });
-
-    await test.step('2. Verify trending keyword visible', async () => {
-      await searchPage.verifyTrendingKeywordVisible();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_005
-  test('TC_SEARCH_005: Verify search with invalid keyword', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with invalid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.invalidSearch);
-    });
-    await test.step('2. Verify text no result product visible', async () => {
-      await searchPage.verifyTextNoResultProductVisible();
-    });
-
-    await test.step('3. Verify no result product visible', async () => {
-      await searchPage.verifyNoResultProduct();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_006
-  test('TC_SEARCH_006: Verify search with no space keyword', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with no space keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.searchWithNoSpace);
-    });
-
-    await test.step('2. Verify header Result Search visible', async () => {
-      await searchPage.verifyResultVisible();
-    });
-
-    await test.step('3. Verify result product visible', async () => {
-      await searchPage.verifyResultProductVisible();
-    });
-
-    await test.step('4. Verify view all button visible', async () => {
-      await searchPage.verifyViewAllButtonVisible();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_007
-  test('TC_SEARCH_007: Verify search with upper case keyword', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with upper case keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.searchWithUpperCase);
-    });
-
-    await test.step('2. Verify header Result Search visible', async () => {
-      await searchPage.verifyResultVisible();
-    });
-
-    await test.step('3. Verify result product visible', async () => {
-      await searchPage.verifyResultProductVisible();
-    });
-
-    await test.step('4. Verify view all button visible', async () => {
-      await searchPage.verifyViewAllButtonVisible();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_008
-  test('TC_SEARCH_008: Verify search with full space keyword', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with full space keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.searchWithFullSpace);
-    });
-
-    await test.step('2. Verify trending keyword visible', async () => {
-      await searchPage.verifyTrendingKeywordVisible();
-    });
-  });
+  }
 
   // @TmsLink TC_SEARCH_009
   test('TC_SEARCH_009: Verify display of search result in grid format', async ({ authPage: page }) => {
@@ -152,19 +86,38 @@ test.describe('@search Search Product Test', () => {
     });
   });
 
-  // @TmsLink TC_SEARCH_010
-  test('TC_SEARCH_010: Verify navigation to spotlight page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
+  for (const scenario of searchData.spotlightCases) {
+    test(`${scenario.tmsId}: ${scenario.title}`, async ({ authPage: page }) => {
+      const searchPage = new SearchPage(page);
 
-    await test.step('1. Search for name product using Enter', async () => {
-      await searchPage.searchUsingEnter(searchData.nameProductSearch);
-    });
+      await test.step(`1. ${scenario.searchStep}`, async () => {
+        await searchPage.searchUsingEnter(scenario.keyword);
+      });
 
-    await test.step('2. Verify URL navigation to spotlight page', async () => {
-      await searchPage.clickViewAll();
-      await searchPage.verifySearchSpotlightUrl(searchData.nameProductSearch);
+      await test.step(`2. ${scenario.viewAllStep}`, async () => {
+        await searchPage.clickViewAll();
+        await searchPage.verifySearchSpotlightUrl(scenario.keyword);
+      });
+
+      if ('scrollToLastProduct' in scenario && scenario.scrollToLastProduct) {
+        await test.step('3. Scroll down to view the last item in the spotlight list', async () => {
+          await searchPage.scrollDownToLastProductItem();
+        });
+      }
+
+      if ('clickSeeMore' in scenario && scenario.clickSeeMore) {
+        await test.step('4. Click See More button', async () => {
+          await searchPage.clickSeeMoreButton();
+        });
+      }
+
+      if ('expectedProductCount' in scenario && scenario.expectedProductCount) {
+        await test.step(`Verify at least ${scenario.expectedProductCount} product items are displayed`, async () => {
+          await searchPage.verifyProductItemCount(scenario.expectedProductCount);
+        });
+      }
     });
-  });
+  }
 
   // @TmsLink TC_SEARCH_011
   test('TC_SEARCH_011: Verify clear search button', async ({ authPage: page }) => {
@@ -217,229 +170,68 @@ test.describe('@search Search Product Test', () => {
     });
   });
 
-  // @TmsLink TC_SEARCH_014
-  test('TC_SEARCH_014: Verify 20 product items in grid on spotlight page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
+  for (const scenario of searchData.socialRedirectionCases) {
+    test(`${scenario.tmsId}: ${scenario.title}`, async ({ authPage: page }) => {
+      const searchPage = new SearchPage(page);
 
-    await test.step('1. Search for a product using Enter', async () => {
-      await searchPage.searchUsingEnter(searchData.nameProductSearch);
+      await test.step('1. Search with valid keyword', async () => {
+        await searchPage.searchUsingEnter(searchData.validSearch);
+      });
+
+      await test.step('2. Click View All button', async () => {
+        await searchPage.clickViewAll();
+      });
+
+      await test.step('3. Scroll to the bottom of the page', async () => {
+        await searchPage.scrollDownToLastProductItem();
+      });
+
+      await test.step(`4. Click ${scenario.target} button and verify redirection`, async () => {
+        await verifySocialRedirection(searchPage, scenario);
+      });
     });
-
-    await test.step('2. Click View All button and navigate to spotlight page', async () => {
-      await searchPage.clickViewAll();
-      await searchPage.verifySearchSpotlightUrl(searchData.nameProductSearch);
-    });
-
-    await test.step('3. Verify there are at least 20 product items in grid', async () => {
-      await searchPage.verifyProductItemCount(20);
-    });
-  });
-
-  // @TmsLink TC_SEARCH_015
-  test('TC_SEARCH_015: Verify scrolling down in search result list', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with a keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button and navigate to spotlight page', async () => {
-      await searchPage.clickViewAll();
-      await searchPage.verifySearchSpotlightUrl(searchData.validSearch);
-    });
-
-    await test.step('3. Scroll down to view the last item in the spotlight list', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_016
-  test('TC_SEARCH_016: Verify clicking See More button loads more products', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with a keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button and navigate to spotlight page', async () => {
-      await searchPage.clickViewAll();
-      await searchPage.verifySearchSpotlightUrl(searchData.validSearch);
-    });
-
-    await test.step('3. Scroll down to view the last item in the spotlight list', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click See More button', async () => {
-      await searchPage.clickSeeMoreButton();
-    });
-
-    await test.step('5. Verify at least 40 product items are displayed', async () => {
-      await searchPage.verifyProductItemCount(40);
-    });
-  });
-
-  // @TmsLink TC_SEARCH_017
-  test('TC_SEARCH_017: Verify search with emoji keyword', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with a keyword containing emoji', async () => {
-      await searchPage.enterSearchKeywordWithEmoji(searchData.searchWithEmoji);
-    });
-
-    await test.step('2. Verify header Result Search visible', async () => {
-      await searchPage.verifyResultVisible();
-    });
-
-    await test.step('3. Verify result product visible', async () => {
-      await searchPage.verifyResultProductVisible();
-    });
-
-    await test.step('4. Verify view all button visible', async () => {
-      await searchPage.verifyViewAllButtonVisible();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_018
-  test('TC_SEARCH_018: Verify search with emoji keyword and click search button', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with a keyword containing emoji', async () => {
-      await searchPage.searchUsingEnter(searchData.emoji);
-    });
-
-    await test.step('2. Verify text no result product visible', async () => {
-      await searchPage.verifyTextNoResultProductVisible();
-    });
-
-    await test.step('3. Verify no result product', async () => {
-      await searchPage.verifyNoResultProduct();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_019
-  test('TC_SEARCH_019: Verify redirection to Contribute page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button', async () => {
-      await searchPage.clickViewAll();
-    });
-
-    await test.step('3. Scroll to the bottom of the page', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click Contribute button and verify redirection', async () => {
-      await searchPage.verifyContributeRedirection();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_020
-  test('TC_SEARCH_020: Verify redirection to Facebook page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button', async () => {
-      await searchPage.clickViewAll();
-    });
-
-    await test.step('3. Scroll to the bottom of the page', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click Facebook button and verify redirection', async () => {
-      await searchPage.verifyFacebookRedirection();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_021
-  test('TC_SEARCH_021: Verify redirection to Zalo page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button', async () => {
-      await searchPage.clickViewAll();
-    });
-
-    await test.step('3. Scroll to the bottom of the page', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click Zalo button and verify redirection', async () => {
-      await searchPage.verifyZaloRedirection();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_022
-  test('TC_SEARCH_022: Verify redirection to Tiktok page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button', async () => {
-      await searchPage.clickViewAll();
-    });
-
-    await test.step('3. Scroll to the bottom of the page', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click Tiktok button and verify redirection', async () => {
-      await searchPage.verifyTiktokRedirection();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_023
-  test('TC_SEARCH_023: Verify redirection to Instagram page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button', async () => {
-      await searchPage.clickViewAll();
-    });
-
-    await test.step('3. Scroll to the bottom of the page', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click Instagram button and verify redirection', async () => {
-      await searchPage.verifyInstagramRedirection();
-    });
-  });
-
-  // @TmsLink TC_SEARCH_024
-  test('TC_SEARCH_024: Verify redirection to Youtube page', async ({ authPage: page }) => {
-    const searchPage = new SearchPage(page);
-
-    await test.step('1. Search with valid keyword', async () => {
-      await searchPage.searchUsingEnter(searchData.validSearch);
-    });
-
-    await test.step('2. Click View All button', async () => {
-      await searchPage.clickViewAll();
-    });
-
-    await test.step('3. Scroll to the bottom of the page', async () => {
-      await searchPage.scrollDownToLastProductItem();
-    });
-
-    await test.step('4. Click Youtube button and verify redirection', async () => {
-      await searchPage.verifyYoutubeRedirection();
-    });
-  });
+  }
 });
+
+async function executeSearch(
+  searchPage: SearchPage,
+  scenario: ResultSearchCase | EmptyKeywordCase | NoResultSearchCase,
+) {
+  switch (scenario.action) {
+    case 'enter':
+      await searchPage.searchUsingEnter(scenario.keyword);
+      break;
+    case 'button':
+      await searchPage.searchUsingSearchButton(scenario.keyword);
+      break;
+    case 'empty':
+      await searchPage.searchWithEmpty(scenario.keyword);
+      break;
+    case 'emojiInput':
+      await searchPage.enterSearchKeywordWithEmoji(scenario.keyword);
+      break;
+  }
+}
+
+async function verifySocialRedirection(searchPage: SearchPage, scenario: SocialRedirectionCase) {
+  switch (scenario.target) {
+    case 'contribute':
+      await searchPage.verifyContributeRedirection();
+      break;
+    case 'facebook':
+      await searchPage.verifyFacebookRedirection();
+      break;
+    case 'zalo':
+      await searchPage.verifyZaloRedirection();
+      break;
+    case 'tiktok':
+      await searchPage.verifyTiktokRedirection();
+      break;
+    case 'instagram':
+      await searchPage.verifyInstagramRedirection();
+      break;
+    case 'youtube':
+      await searchPage.verifyYoutubeRedirection();
+      break;
+  }
+}

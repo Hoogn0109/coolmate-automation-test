@@ -4,96 +4,96 @@ import { CartPage } from './cart.page';
 import { LoginPage } from './login.page';
 
 export class CheckoutPage {
-  readonly page: Page;
+  private readonly page: Page;
 
   // Form Inputs 
-  readonly fullNameInput: Locator;
-  readonly phoneInput: Locator;
-  readonly emailInput: Locator;
-  readonly addressInput: Locator;
-  readonly orderNoteInput: Locator;
+  private readonly fullNameInput: Locator;
+  private readonly phoneInput: Locator;
+  private readonly emailInput: Locator;
+  private readonly addressInput: Locator;
+  private readonly orderNoteInput: Locator;
 
   // Receiver Form
-  readonly receiverCheckboxLabel: Locator;
-  readonly receiverNameInput: Locator;
-  readonly receiverPhoneInput: Locator;
-  readonly receiverError: Locator;
+  private readonly receiverCheckboxLabel: Locator;
+  private readonly receiverNameInput: Locator;
+  private readonly receiverPhoneInput: Locator;
+  private readonly receiverError: Locator;
 
   // VAT Form 
-  readonly vatCheckboxLabel: Locator;
-  readonly vatCompanyInput: Locator;
-  readonly vatTaxInput: Locator;
-  readonly vatAddressInput: Locator;
-  readonly vatEmailInput: Locator;
-  readonly vatError: Locator;
-  readonly vatNote: Locator;
+  private readonly vatCheckboxLabel: Locator;
+  private readonly vatCompanyInput: Locator;
+  private readonly vatTaxInput: Locator;
+  private readonly vatAddressInput: Locator;
+  private readonly vatEmailInput: Locator;
+  private readonly vatError: Locator;
+  private readonly vatNote: Locator;
 
   // Cart Items & Products 
-  readonly cartProductItem: Locator;
-  readonly cartProductImage: Locator;
-  readonly cartProductName: Locator;
-  readonly cartProductPrice: Locator;
-  readonly cartProductQuantity: Locator;
-  readonly quantityIncreaseBtn: Locator;
-  readonly quantityDecreaseBtn: Locator;
-  readonly removeProductBtn: Locator;
-  readonly removeAllBtn: Locator;
-  readonly emptyCartMessage: Locator;
-  readonly variantDropdown: Locator;
+  private readonly cartProductItem: Locator;
+  private readonly cartProductImage: Locator;
+  private readonly cartProductName: Locator;
+  private readonly cartProductPrice: Locator;
+  private readonly cartProductQuantity: Locator;
+  private readonly quantityIncreaseBtn: Locator;
+  private readonly quantityDecreaseBtn: Locator;
+  private readonly removeProductBtn: Locator;
+  private readonly removeAllBtn: Locator;
+  private readonly emptyCartMessage: Locator;
+  private readonly variantDropdown: Locator;
 
   // Checkout Details 
-  readonly orderTotalLabel: Locator;
-  readonly orderSubtotalLabel: Locator;
-  readonly fallbackTotalText: Locator;
-  readonly paymentShippingFeeLabel: Locator;
+  private readonly orderTotalLabel: Locator;
+  private readonly orderSubtotalLabel: Locator;
+  private readonly fallbackTotalText: Locator;
+  private readonly paymentShippingFeeLabel: Locator;
 
   // UI Elements & Banners
-  readonly toastNotification: Locator;
-  readonly fomoBanner: Locator;
-  readonly upsellSection: Locator;
-  readonly upsellAddBtn: Locator;
-  readonly giftItem: Locator;
-  readonly stockWarning: Locator;
-  readonly coolclubPopupCloseBtn: Locator;
+  private readonly toastNotification: Locator;
+  private readonly fomoBanner: Locator;
+  private readonly upsellSection: Locator;
+  private readonly upsellAddBtn: Locator;
+  private readonly giftItem: Locator;
+  private readonly stockWarning: Locator;
+  private readonly coolclubPopupCloseBtn: Locator;
 
   // Policies & Methods
-  readonly policyCheckboxLabel: Locator;
-  readonly policyCheckbox: Locator;
-  readonly codLabel: Locator;
-  readonly onlinePaymentLabels: Locator;
-  readonly submitOrderBtn: Locator;
+  private readonly policyCheckboxLabel: Locator;
+  private readonly policyCheckbox: Locator;
+  private readonly codLabel: Locator;
+  private readonly onlinePaymentLabels: Locator;
+  private readonly submitOrderBtn: Locator;
 
   // Addresses
-  readonly savedAddressList: Locator;
-  readonly saveAddressCheckbox: Locator;
-  readonly shippingCityInput: Locator;
-  readonly shippingDistrictInput: Locator;
-  readonly shippingWardInput: Locator;
-  readonly shippingLocationError: Locator;
+  private readonly savedAddressList: Locator;
+  private readonly saveAddressCheckbox: Locator;
+  private readonly shippingCityInput: Locator;
+  private readonly shippingDistrictInput: Locator;
+  private readonly shippingWardInput: Locator;
+  private readonly shippingLocationError: Locator;
 
   // Vouchers, Referrals & Discounts
-  readonly referralSection: Locator;
-  readonly referralInput: Locator;
-  readonly savingsAmount: Locator;
-  readonly coolClubSection: Locator;
-  readonly coolCashSection: Locator;
-  readonly voucherSection: Locator;
-  readonly voucherList: Locator;
-  readonly voucherDisabledItem: Locator;
-  readonly voucherDisabledWarning: Locator;
-  readonly voucherActiveItem: Locator;
-  readonly discountCodeInput: Locator;
-  readonly discountApplyBtn: Locator;
-  readonly discountSuccessMessage: Locator;
-  readonly discountRemoveBtn: Locator;
-  readonly discountErrorToast: Locator;
-  readonly referralApplyBtn: Locator;
+  private readonly referralSection: Locator;
+  private readonly referralInput: Locator;
+  private readonly savingsAmount: Locator;
+  private readonly coolClubSection: Locator;
+  private readonly coolCashSection: Locator;
+  private readonly voucherSection: Locator;
+  private readonly voucherList: Locator;
+  private readonly voucherDisabledItem: Locator;
+  private readonly voucherDisabledWarning: Locator;
+  private readonly voucherActiveItem: Locator;
+  private readonly discountCodeInput: Locator;
+  private readonly discountApplyBtn: Locator;
+  private readonly discountSuccessMessage: Locator;
+  private readonly discountRemoveBtn: Locator;
+  private readonly discountErrorToast: Locator;
+  private readonly referralApplyBtn: Locator;
 
   // Error Messages
-  readonly nameError: Locator;
-  readonly phoneError: Locator;
-  readonly emailError: Locator;
-  readonly fieldErrorMessages: Locator;
+  private readonly nameError: Locator;
+  private readonly phoneError: Locator;
+  private readonly emailError: Locator;
+  private readonly fieldErrorMessages: Locator;
 
   static async addProductAndGoToCart(page: Page): Promise<CheckoutPage> {
     const cartPage = new CartPage(page);
@@ -148,8 +148,6 @@ export class CheckoutPage {
 
   constructor(page: Page) {
     this.page = page;
-
-    // Form Inputs
     this.fullNameInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.fullNameRoleName)
       .or(page.locator(CHECKOUT_LOCATOR.fullNameInput)).and(page.locator(CHECKOUT_LOCATOR.visibleFilter)).first();
     this.phoneInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.phoneRoleName)
@@ -158,14 +156,10 @@ export class CheckoutPage {
       .or(page.locator(CHECKOUT_LOCATOR.emailInput)).and(page.locator(CHECKOUT_LOCATOR.visibleFilter)).first();
     this.addressInput = page.locator(CHECKOUT_LOCATOR.addressInput).first();
     this.orderNoteInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.orderNoteRoleName).or(page.locator(CHECKOUT_LOCATOR.orderNoteInput));
-
-    // Receiver Form
     this.receiverCheckboxLabel = CHECKOUT_LOCATOR.textByText(page, CHECKOUT_LOCATOR.receiverCheckboxText).first();
     this.receiverNameInput = page.locator(CHECKOUT_LOCATOR.receiverNameInputFallback).first();
     this.receiverPhoneInput = page.locator(CHECKOUT_LOCATOR.receiverPhoneInputFallback).first();
     this.receiverError = page.locator(CHECKOUT_LOCATOR.receiverError).first();
-
-    // VAT Form
     this.vatCheckboxLabel = CHECKOUT_LOCATOR.textByText(page, CHECKOUT_LOCATOR.vatCheckboxText).first();
     this.vatCompanyInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatCompanyRoleName).or(page.locator(CHECKOUT_LOCATOR.vatCompanyInput)).first();
     this.vatTaxInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatTaxCodeRoleName).or(page.locator(CHECKOUT_LOCATOR.vatTaxCodeInput)).first();
@@ -173,8 +167,6 @@ export class CheckoutPage {
     this.vatEmailInput = CHECKOUT_LOCATOR.textBoxByRole(page, CHECKOUT_LOCATOR.vatEmailRoleName).or(page.locator(CHECKOUT_LOCATOR.vatEmailInputFallback)).first();
     this.vatError = page.locator(CHECKOUT_LOCATOR.vatError).first();
     this.vatNote = page.locator(CHECKOUT_LOCATOR.vatNote).first();
-
-    // Cart Items & Products
     this.cartProductItem = page.locator(CHECKOUT_LOCATOR.cartProductItem);
     this.cartProductImage = page.locator(CHECKOUT_LOCATOR.cartProductImage);
     this.cartProductName = page.locator(CHECKOUT_LOCATOR.cartProductName);
@@ -186,14 +178,10 @@ export class CheckoutPage {
     this.removeAllBtn = page.locator(CHECKOUT_LOCATOR.removeAllBtn).first();
     this.emptyCartMessage = page.locator(CHECKOUT_LOCATOR.emptyCartMessage).first();
     this.variantDropdown = page.locator(CHECKOUT_LOCATOR.variantDropdown);
-
-    // Checkout Details
     this.orderTotalLabel = page.locator(CHECKOUT_LOCATOR.orderTotalLabel).first();
     this.orderSubtotalLabel = page.locator(CHECKOUT_LOCATOR.orderSubtotalLabel).first();
     this.fallbackTotalText = page.locator(CHECKOUT_LOCATOR.fallbackTotalText).first().locator(CHECKOUT_LOCATOR.parentElement);
     this.paymentShippingFeeLabel = page.locator(CHECKOUT_LOCATOR.paymentShippingFeeLabel).first();
-
-    // UI Elements & Banners 
     this.toastNotification = page.locator(CHECKOUT_LOCATOR.toastNotification).first();
     this.fomoBanner = page.locator(CHECKOUT_LOCATOR.fomoBanner).first();
     this.upsellSection = page.locator(CHECKOUT_LOCATOR.upsellSection).first();
@@ -201,23 +189,17 @@ export class CheckoutPage {
     this.giftItem = page.locator(CHECKOUT_LOCATOR.giftItem).first();
     this.stockWarning = page.locator(CHECKOUT_LOCATOR.stockWarning).first();
     this.coolclubPopupCloseBtn = page.locator(CHECKOUT_LOCATOR.coolclubPopupCloseBtn).first();
-
-    // Policies & Methods
     this.policyCheckboxLabel = page.locator(CHECKOUT_LOCATOR.policyCheckboxLabel).first();
     this.policyCheckbox = page.locator(CHECKOUT_LOCATOR.policyCheckbox).first();
     this.codLabel = page.locator(CHECKOUT_LOCATOR.codLabel).first();
     this.onlinePaymentLabels = page.locator(CHECKOUT_LOCATOR.onlinePaymentLabels);
     this.submitOrderBtn = page.locator(CHECKOUT_LOCATOR.submitOrderBtn).first();
-
-    // Addresses
     this.savedAddressList = page.locator(CHECKOUT_LOCATOR.savedAddressList);
     this.saveAddressCheckbox = page.locator(CHECKOUT_LOCATOR.saveAddressCheckbox).first();
     this.shippingCityInput = page.locator(CHECKOUT_LOCATOR.shippingCityInput).first();
     this.shippingDistrictInput = page.locator(CHECKOUT_LOCATOR.shippingDistrictInput).first();
     this.shippingWardInput = page.locator(CHECKOUT_LOCATOR.shippingWardInput).first();
-    this.shippingLocationError = page.locator(CHECKOUT_LOCATOR.shippingLocationError).first();
-
-    // Vouchers, Referrals & Discounts 
+    this.shippingLocationError = page.locator(CHECKOUT_LOCATOR.shippingLocationError).first(); 
     this.referralSection = page.locator(CHECKOUT_LOCATOR.referralSection).first();
     this.referralInput = page.locator(CHECKOUT_LOCATOR.referralInput).first();
     this.savingsAmount = page.locator(CHECKOUT_LOCATOR.savingsAmount).first();
@@ -234,30 +216,44 @@ export class CheckoutPage {
     this.discountRemoveBtn = page.locator(CHECKOUT_LOCATOR.discountRemoveBtn).first();
     this.discountErrorToast = page.locator(CHECKOUT_LOCATOR.discountErrorToast).first();
     this.referralApplyBtn = page.locator(CHECKOUT_LOCATOR.referralApplyBtn).last();
-
-    // Error Messages
     this.nameError = page.locator(CHECKOUT_LOCATOR.nameError).first();
     this.phoneError = page.locator(CHECKOUT_LOCATOR.phoneError).first();
     this.emailError = page.locator(CHECKOUT_LOCATOR.emailError).first();
     this.fieldErrorMessages = page.locator(CHECKOUT_LOCATOR.fieldErrorMessages);
   }
 
-  // NAVIGATION
   async openCart() {
     await this.page.goto(process.env.BASE_URL + "cart");
     await this.page.waitForLoadState("domcontentloaded");
     await this.dismissCoolClubPopup();
   }
 
-  async dismissCoolClubPopup() {
-    try {
-      await this.coolclubPopupCloseBtn.click({ timeout: 2_000 });
-      await this.page.waitForTimeout(300);
-    } catch {
-    }
+  async expectCartUrl(timeout: number = 10_000) {
+    await expect(this.page).toHaveURL(/.*cart.*/, { timeout });
   }
 
-  // CART PRODUCT LIST
+  async expectCartOrCheckoutUrl(timeout: number = 3_000) {
+    await expect(this.page).toHaveURL(/.*cart.*|.*checkout.*/, { timeout });
+  }
+
+  async dismissCoolClubPopup() {
+    const closeButtons = this.page.locator(CHECKOUT_LOCATOR.coolclubPopupCloseBtn);
+    const count = await closeButtons.count().catch(() => 0);
+
+    for (let i = count - 1; i >= 0; i--) {
+      const closeBtn = closeButtons.nth(i);
+      if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await closeBtn.click({ force: true, timeout: 2_000 }).catch(() => { });
+        await this.page.waitForTimeout(300);
+        break;
+      }
+    }
+
+    await this.page.keyboard.press('Escape').catch(() => { });
+    await expect(this.page.locator(CHECKOUT_LOCATOR.openDialog).first()).not.toBeVisible({ timeout: 3_000 }).catch(() => { });
+  }
+
+  // Cart product list
   async getCartItemCount(): Promise<number> {
     const containerCount = await this.cartProductItem.count();
     if (containerCount > 0) {
@@ -287,7 +283,7 @@ export class CheckoutPage {
     await expect(this.cartProductQuantity.first()).toBeVisible({ timeout: 10_000 });
   }
 
-  // QUANTITY ACTIONS
+  // Quantity actions
   async increaseQuantity(index: number = 0) {
     const btn = this.quantityIncreaseBtn.nth(index);
     await btn.waitFor({ state: "visible", timeout: 5_000 });
@@ -308,7 +304,7 @@ export class CheckoutPage {
     return parseInt(val, 10) || 0;
   }
 
-  // REMOVE PRODUCT
+  // Remove products
   async removeProduct(index: number = 0) {
     const btn = this.removeProductBtn.nth(index);
     await btn.waitFor({ state: "visible", timeout: 5_000 });
@@ -321,9 +317,14 @@ export class CheckoutPage {
   }
 
   async removeAllProducts() {
+    await this.dismissCoolClubPopup();
     const isVisible = await this.removeAllBtn.isVisible().catch(() => false);
     if (isVisible) {
-      await this.removeAllBtn.click();
+      await this.removeAllBtn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+      await this.removeAllBtn.click({ timeout: 5_000 }).catch(async () => {
+        await this.dismissCoolClubPopup();
+        await this.removeAllBtn.click({ force: true, timeout: 5_000 });
+      });
       try {
         const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
         if (await confirmBtn.isVisible({ timeout: 1500 })) await confirmBtn.click();
@@ -343,7 +344,7 @@ export class CheckoutPage {
     await this.emptyCartMessage.waitFor({ state: "attached", timeout: 10_000 });
   }
 
-  // ORDER TOTAL
+  // Order Summary & Total
   parsePrice(text: string): number {
     const amountText = this.extractFirstCurrencyText(text) ?? text;
     return parseInt(amountText.replace(/[^\d]/g, ""), 10) || 0;
@@ -384,7 +385,7 @@ export class CheckoutPage {
     await expect(this.orderSubtotalLabel).toBeVisible({ timeout: 10_000 });
   }
 
-  // VARIANT CHANGE
+  // Variant selection
   async changeVariant(index: number = 0) {
     const dropdown = this.variantDropdown.nth(index);
     const isVisible = await dropdown.isVisible().catch(() => false);
@@ -396,12 +397,10 @@ export class CheckoutPage {
     }
   }
 
-  // FOMO
   async expectFomoBannerVisible() {
     await expect(this.fomoBanner).toBeVisible({ timeout: 10_000 });
   }
 
-  // UPSELL / GIFT
   async expectUpsellSectionVisible() {
     await expect(this.upsellSection).toBeVisible({ timeout: 10_000 });
   }
@@ -416,7 +415,10 @@ export class CheckoutPage {
     await expect(this.giftItem).toBeVisible({ timeout: 10_000 });
   }
 
-  // POLICY CHECKBOX
+  async expectUpsellAddButtonVisible() {
+    await expect(this.upsellAddBtn).toBeVisible({ timeout: 5_000 });
+  }
+
   async expectPolicyCheckboxVisible() {
     await expect(this.policyCheckboxLabel).toBeVisible({ timeout: 10_000 });
   }
@@ -435,7 +437,7 @@ export class CheckoutPage {
     }
   }
 
-  // PERSONAL INFO FORM
+  // Personal receiver information
   async fillPersonalInfo(name: string, phone: string, email?: string) {
     await this.fullNameInput.waitFor({ state: "visible", timeout: 10_000 });
     await this.fullNameInput.fill(name);
@@ -463,8 +465,25 @@ export class CheckoutPage {
     return this.phoneInput.inputValue({ timeout: 5_000 }).catch(() => "");
   }
 
+  async expectPersonalInfoValue(expectedName: string, expectedPhone: string) {
+    const nameValue = await this.getFullNameValue();
+    expect(nameValue).toBe(expectedName);
+
+    const phoneValue = await this.getPhoneValue();
+    expect(phoneValue).toBe(expectedPhone);
+  }
+
   async fillEmail(email: string) {
     await this.emailInput.fill(email);
+  }
+
+  async getEmailValue() {
+    return this.emailInput.inputValue({ timeout: 5_000 }).catch(() => "");
+  }
+
+  async expectEmailValue(expectedEmail: string) {
+    const emailValue = await this.getEmailValue();
+    expect(emailValue).toBe(expectedEmail);
   }
 
   async expectNameErrorVisible() {
@@ -506,7 +525,15 @@ export class CheckoutPage {
     expect(value.length, "Phone should be auto-filled from account").toBeGreaterThan(0);
   }
 
-  // ADDRESS
+  async expectPersonalInfoRetained(expectedName: string, expectedPhone: string) {
+    const nameValue = await this.getFullNameValue();
+    expect(nameValue, 'Verify full name is retained after failed code application').toBe(expectedName);
+
+    const phoneValue = await this.getPhoneValue();
+    expect(phoneValue, 'Verify phone number is retained after failed code application').toBe(expectedPhone);
+  }
+
+  // Address and Shipping
   async fillAddress(address: string) {
     await this.addressInput.waitFor({ state: "visible", timeout: 10_000 });
     await this.addressInput.scrollIntoViewIfNeeded();
@@ -519,6 +546,11 @@ export class CheckoutPage {
 
   async getAddressValue() {
     return await this.addressInput.inputValue({ timeout: 5000 }).catch(() => "");
+  }
+
+  async expectAddressValue(expectedAddress: string) {
+    const value = await this.getAddressValue();
+    expect(value).toBe(expectedAddress);
   }
 
   async fillShippingAddress(
@@ -751,7 +783,7 @@ export class CheckoutPage {
     }
   }
 
-  // ORDER NOTE
+  // Order note
   async fillOrderNote(note: string) {
     await this.orderNoteInput.first().scrollIntoViewIfNeeded();
     await this.orderNoteInput.first().fill(note);
@@ -759,7 +791,6 @@ export class CheckoutPage {
     expect(value).toBe(note);
   }
 
-  // RECEIVER INFO
   async tickReceiverCheckbox() {
     await this.receiverCheckboxLabel.scrollIntoViewIfNeeded();
     await this.receiverCheckboxLabel.click();
@@ -771,6 +802,14 @@ export class CheckoutPage {
     await this.receiverPhoneInput.fill(phone, { force: true });
   }
 
+  async expectReceiverInfoValue(expectedName: string, expectedPhone: string) {
+    const nameValue = await this.receiverNameInput.inputValue({ timeout: 5_000 }).catch(() => "");
+    expect(nameValue).toBe(expectedName);
+
+    const phoneValue = await this.receiverPhoneInput.inputValue({ timeout: 5_000 }).catch(() => "");
+    expect(phoneValue).toBe(expectedPhone);
+  }
+
   async expectReceiverFormVisible() {
     await expect(this.receiverNameInput).toBeAttached({ timeout: 8_000 });
     await expect(this.receiverPhoneInput).toBeAttached({ timeout: 8_000 });
@@ -780,7 +819,7 @@ export class CheckoutPage {
     await expect(this.receiverError).toBeVisible({ timeout: 5_000 });
   }
 
-  // VAT INVOICE
+  // Vat info
   async tickVatCheckbox() {
     await this.vatCheckboxLabel.scrollIntoViewIfNeeded();
     await this.vatCheckboxLabel.click();
@@ -792,6 +831,11 @@ export class CheckoutPage {
     await this.vatTaxInput.fill(taxCode, { force: true });
     await this.vatAddressInput.fill(address, { force: true });
     await this.vatEmailInput.fill(email, { force: true });
+  }
+
+  async expectVatCompanyValue(expectedCompany: string) {
+    const companyValue = await this.vatCompanyInput.inputValue({ timeout: 5_000 }).catch(() => "");
+    expect(companyValue).toBe(expectedCompany);
   }
 
   async expectVatFormVisible() {
@@ -807,7 +851,6 @@ export class CheckoutPage {
     await expect(this.vatNote).toBeVisible({ timeout: 5_000 });
   }
 
-  // COOLCLUB / COOLCASH
   async expectCoolClubVisible() {
     await expect(this.coolClubSection).toBeVisible({ timeout: 10_000 });
   }
@@ -816,7 +859,6 @@ export class CheckoutPage {
     await expect(this.coolCashSection).toBeVisible({ timeout: 10_000 });
   }
 
-  // VOUCHER / DISCOUNT
   async expectVoucherSectionVisible() {
     await expect(this.voucherSection).toBeVisible({ timeout: 10_000 });
   }
@@ -838,6 +880,16 @@ export class CheckoutPage {
     await this.page.waitForTimeout(1_000);
   }
 
+  async applyAvailableVoucherIfVisible(): Promise<boolean> {
+    const availableVoucher = this.page.locator(CHECKOUT_LOCATOR.availableVoucherApplyButton).first();
+    if (await availableVoucher.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await availableVoucher.click();
+      await this.expectDiscountApplied().catch(() => { });
+      return true;
+    }
+    return false;
+  }
+
   async applyDiscountCode(code: string) {
     await this.discountCodeInput.first().waitFor({ state: "visible", timeout: 5_000 });
     await this.discountCodeInput.first().fill(code);
@@ -855,6 +907,17 @@ export class CheckoutPage {
     await this.page.waitForTimeout(1_000);
   }
 
+  async removeDiscountIfVisibleAndExpectToast(): Promise<boolean> {
+    if (await this.discountRemoveBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await this.discountRemoveBtn.click();
+      const toast = this.page.locator(CHECKOUT_LOCATOR.discountRemovedToast).first();
+      await expect(toast).toBeVisible({ timeout: 5_000 });
+      return true;
+    }
+
+    return false;
+  }
+
   async expectDiscountRemoved() {
     await expect(this.discountSuccessMessage).not.toBeVisible({ timeout: 5_000 });
   }
@@ -863,7 +926,10 @@ export class CheckoutPage {
     await expect(this.discountErrorToast).toBeVisible({ timeout: 5_000 });
   }
 
-  // REFERRAL
+  async expectDiscountCodeInputVisible() {
+    await expect(this.discountCodeInput.first()).toBeVisible({ timeout: 5_000 });
+  }
+
   async applyReferralCode(code: string) {
     await this.referralSection.scrollIntoViewIfNeeded();
     await this.referralInput.waitFor({ state: "visible", timeout: 5_000 });
@@ -872,10 +938,26 @@ export class CheckoutPage {
     await this.page.waitForTimeout(1_500);
   }
 
-  // PAYMENT DETAIL BREAKDOWN
+  async expectReferralInputVisible() {
+    await expect(this.referralInput).toBeVisible({ timeout: 5_000 });
+  }
+
+  async expectReferralFeedbackVisible() {
+    const hasToast = await this.toastNotification.isVisible().catch(() => false);
+    const hasReferralSection = await this.referralSection.isVisible().catch(() => false);
+    expect(hasToast || hasReferralSection, 'Must have feedback after entering referral code').toBeTruthy();
+  }
+
+  // Payment detail breakdown
   async expectPaymentBreakdownVisible() {
     await expect(this.orderSubtotalLabel).toBeVisible({ timeout: 10_000 });
     await expect(this.orderTotalLabel).toBeVisible({ timeout: 10_000 });
+  }
+
+  async expectSavingsAmountVisibleWithCurrency() {
+    await expect(this.savingsAmount).toBeVisible({ timeout: 5_000 });
+    const savingsText = await this.savingsAmount.textContent();
+    expect(savingsText, 'Savings amount must contain a monetary value').toMatch(/\d+/);
   }
 
   async expectPaymentBreakdownComplete() {
@@ -884,9 +966,38 @@ export class CheckoutPage {
     await expect(this.orderTotalLabel).toBeVisible({ timeout: 10_000 });
   }
 
-  // PAYMENT METHOD
+  // Payment method
   async expectCodSelected() {
     await expect(this.codLabel).toBeVisible({ timeout: 10_000 });
+  }
+
+  async expectCodPaymentMethodSelected() {
+    const codRadio = this.page.locator(CHECKOUT_LOCATOR.codRadioInput).first()
+      .or(this.page.locator(CHECKOUT_LOCATOR.codRadioByLabel)).first();
+    const isChecked = await codRadio.isChecked({ timeout: 5000 }).catch(() => true);
+    expect(isChecked).toBeTruthy();
+  }
+
+  async selectFirstOnlinePaymentIfVisible(): Promise<boolean> {
+    const option = this.page.locator(CHECKOUT_LOCATOR.onlinePaymentRadioInput).first();
+    if (!(await option.isVisible({ timeout: 5000 }).catch(() => false))) {
+      return false;
+    }
+
+    await option.click({ force: true });
+    const isChecked = await option.isChecked();
+    expect(isChecked, 'Online payment option should be checked').toBeTruthy();
+    return true;
+  }
+
+  async selectZaloPayIfVisible(): Promise<boolean> {
+    const option = this.page.locator(CHECKOUT_LOCATOR.zaloPayRadioInput).first();
+    if (!(await option.isVisible({ timeout: 3000 }).catch(() => false))) {
+      return false;
+    }
+
+    await option.click({ force: true });
+    return true;
   }
 
   async selectPaymentMethod(method: string) {
@@ -901,11 +1012,15 @@ export class CheckoutPage {
     expect(count, "At least one online payment option should be visible").toBeGreaterThan(0);
   }
 
-  // SUBMIT ORDER
+  // Submit order
   async clickSubmitOrder() {
     await this.submitOrderBtn.scrollIntoViewIfNeeded();
     await this.submitOrderBtn.click();
     await this.page.waitForTimeout(1_500);
+  }
+
+  async expectSubmitOrderButtonVisible() {
+    await expect(this.submitOrderBtn).toBeVisible();
   }
 
   async expectSubmitBlocked() {
@@ -914,7 +1029,7 @@ export class CheckoutPage {
     expect(this.page.url()).toBe(currentUrl);
   }
 
-  // STOCK WARNING
+  // Stock warning
   async expectStockWarningVisible() {
     await expect(this.stockWarning).toBeVisible({ timeout: 10_000 });
   }

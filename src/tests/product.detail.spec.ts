@@ -4,7 +4,7 @@ import { SearchPage } from '../pages/search.page';
 import { productData } from '../data/product.detail.data';
 import { searchData } from '../data/search.data';
 
-test.describe('@productDetail Product Detail Page Tests', () => {
+test.describe('@productDetail @public Product Detail Page Tests', () => {
 
     // @TmsLink TC_PDP_001
     test('TC_PDP_001: Verify navigation to product detail page from search', async ({ authPage: page }) => {
@@ -37,13 +37,10 @@ test.describe('@productDetail Product Detail Page Tests', () => {
     });
 });
 
-test.describe('@public AT_PDP_GAL – Product Gallery', () => {
+test.describe('@productDetail @public AT_PDP_XX – Product Gallery', () => {
 
-    /**
-     * AT_PDP_GAL_001: Verify default gallery display when PDP loads.
-     * Covers: Main image visible, thumbnails list displayed.
-     */
-    test('AT_PDP_GAL_001 – Default display on page load', async ({ authPage: page }) => {
+    //TmsLink AT_PDP_003
+    test('AT_PDP_003 – Default display on page load', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Open PDP page for any product', async () => {
@@ -62,11 +59,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_002: Verify image switching via thumbnail click.
-     * Covers: Main image changes, clicked thumbnail becomes active.
-     */
-    test('AT_PDP_GAL_002 – Image switching via Thumbnail', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_004
+    test('AT_PDP_004 – Image switching via Thumbnail', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Open PDP page for any product', async () => {
@@ -86,11 +80,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_003: Verify Next (>) button navigation.
-     * Covers: Image advances to next, wraps around from last to first.
-     */
-    test('AT_PDP_GAL_003 – Use Next (>) button navigation', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_005
+    test('AT_PDP_005 – Use Next (>) button navigation', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Open PDP page', async () => {
@@ -106,11 +97,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_004: Verify Prev (<) button navigation.
-     * Covers: Image goes to previous, wraps around from first to last.
-     */
-    test('AT_PDP_GAL_004 – Use Prev (<) button navigation', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_006
+    test('AT_PDP_006 – Use Prev (<) button navigation', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         const altText = productData.image.altText;
 
@@ -123,11 +111,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_005: Verify fullscreen/lightbox activation.
-     * Covers: Click main image opens fullscreen, high-resolution image displayed.
-     */
-    test('AT_PDP_GAL_005 – Activate Fullscreen mode', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_007
+    test('AT_PDP_007 – Activate Fullscreen mode', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Open PDP page', async () => {
@@ -144,11 +129,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_006: Verify interactions within fullscreen mode.
-     * Covers: Next/Prev navigation inside lightbox, close via X and ESC.
-     */
-    test('AT_PDP_GAL_006 – Interactions in Fullscreen', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_008
+    test('AT_PDP_008 – Interactions in Fullscreen', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         let srcBefore: string | null;
         let srcAfter: string | null = null;
@@ -189,11 +171,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_007: Verify gallery updates when color variant changes.
-     * Covers: Gallery images sync with selected color.
-     */
-    test('AT_PDP_GAL_007 – Sync images by Color', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_009
+    test('AT_PDP_009 – Sync images by Color', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         let defaultImageSrc: string | null;
 
@@ -230,10 +209,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_008 - Verify Rating & Review display
-     */
-    test('AT_PDP_GAL_008 – Verify Rating & Review display', async ({ authPage: page }) => {
+   // TmsLink AT_PDP_010
+    test('AT_PDP_010 – Verify Rating & Review display', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         let expectedScore = "";
 
@@ -254,10 +231,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_009 - Verify Sale Price display
-     */
-    test('AT_PDP_GAL_009 – Verify Sale Price display', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_011
+    test('AT_PDP_011 – Verify Sale Price display', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Open PDP page', async () => {
@@ -271,10 +246,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_010 - Verify Original Price display
-     */
-    test('AT_PDP_GAL_010 – Verify Original Price display', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_012
+    test('AT_PDP_012 – Verify Original Price display', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Open PDP page for a discounted product', async () => {
@@ -290,13 +263,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_011 - Verify Discount percent display
-     * Steps:
-     *   1. Access a discounted product.
-     *   2. Verify display label and logical value calculation.
-     */
-    test('AT_PDP_GAL_011 – Verify Discount percent display', async ({ authPage: page }) => {
+   // TmsLink AT_PDP_013
+    test('AT_PDP_013 – Verify Discount percent display', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access a discounted product', async () => {
@@ -308,13 +276,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_012 - Verify Voucher list display
-     * Steps:
-     *   1. Access PDP.
-     *   2. View available Vouchers and verify detailed information.
-     */
-    test('AT_PDP_GAL_012 – Verify Voucher list display', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_014
+    test('AT_PDP_014 – Verify Voucher list display', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -326,10 +289,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_013 - Verify Size selection
-     */
-    test('AT_PDP_GAL_013 – Verify Size selection', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_015
+    test('AT_PDP_015 – Verify Size selection', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP and observe size list', async () => {
@@ -341,10 +302,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_014 - Verify Size guide
-     */
-    test('AT_PDP_GAL_014 – Verify Size guide', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_016
+    test('AT_PDP_016 – Verify Size guide', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -356,10 +315,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_015 - Verify Quantity stepper
-     */
-    test('AT_PDP_GAL_015 – Verify Quantity stepper', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_017
+    test('AT_PDP_017 – Verify Quantity stepper', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -371,10 +328,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_016 - Verify Add to cart
-     */
-    test('AT_PDP_GAL_016 – Verify Add to cart', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_018
+    test('AT_PDP_018 – Verify Add to cart', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -386,10 +341,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_017 - Verify Product Description
-     */
-    test('AT_PDP_GAL_017 – Verify Product Description', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_019
+    test('AT_PDP_019 – Verify Product Description', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -401,10 +354,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_018 - Verify Policy display
-     */
-    test('AT_PDP_GAL_018 – Verify Policy display', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_020
+    test('AT_PDP_020 – Verify Policy display', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -416,10 +367,8 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
         });
     });
 
-    /**
-     * AT_PDP_GAL_019 - Verify Related products
-     */
-    test('AT_PDP_GAL_019 – Verify Related products', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_021
+    test('AT_PDP_021 – Verify Related products', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP and scroll to the bottom of the page', async () => {
@@ -432,9 +381,10 @@ test.describe('@public AT_PDP_GAL – Product Gallery', () => {
     });
 });
 
-test.describe('@public AT_PDP_REV – Product Reviews', () => {
+test.describe('@productDetail @public AT_PDP_XX – Product Reviews', () => {
 
-    test('AT_PDP_REV_001 – Search reviews with valid keyword', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_022
+    test('AT_PDP_022 – Search reviews with valid keyword', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         await test.step('1. Access PDP', async () => {
             await pdp.openPdpPageReview();
@@ -444,7 +394,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    test('AT_PDP_REV_002 – Filter results by multiple criteria', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_023
+    test('AT_PDP_023 – Filter results by multiple criteria', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         await test.step('1. Access PDP', async () => {
             await pdp.openPdpPageReview();
@@ -454,7 +405,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    test('AT_PDP_REV_003 – Sort Reviews from Low to High', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_024
+    test('AT_PDP_024 – Sort Reviews from Low to High', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
         await test.step('1. Access PDP', async () => {
             await pdp.openPdpPageReview();
@@ -464,15 +416,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    /**
-     * AT_PDP_REV_004: Verify Pagination & Scroll Behavior
-     * Steps: Scroll to the bottom of the review section → Click page "2"
-     * Verify:
-     *   Visual: Page number "2" is highlighted in gray (active state)
-     *   Logic: Screen position does not jump to the top of the page
-     *   Data: Review list changes to new data
-     */
-    test('AT_PDP_REV_004 – Verify Pagination & Scroll Behavior', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_025
+    test('AT_PDP_025 – Verify Pagination & Scroll Behavior', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -484,12 +429,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    /**
-     * AT_PDP_REV_005: Display Empty State when no results
-     * Steps: Enter non-existing keyword into Search box
-     * Verify: Visual – No reviews are displayed in the list
-     */
-    test('AT_PDP_REV_005 – Display Empty State when no results', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_026
+    test('AT_PDP_026 – Display Empty State when no results', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -501,12 +442,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    /**
-     * AT_PDP_REV_006: Display buyer details
-     * Steps: View specific review in the list
-     * Verify: Visual – Display correct Size, Color (and Height, Weight if available)
-     */
-    test('AT_PDP_REV_006 – Display buyer details', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_027
+    test('AT_PDP_027 – Display buyer details', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -518,14 +455,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    /**
-     * AT_PDP_REV_007: Media Interaction (Image Preview)
-     * Steps: Click on an image in Review Images
-     * Verify:
-     *   Visual: Modal Preview opens
-     *   Logic: Image src attribute is valid (not broken)
-     */
-    test('AT_PDP_REV_007 – Media Interaction (Image Preview)', async ({ authPage: page }) => {
+    // TmsLink AT_PDP_028
+    test('AT_PDP_028 – Media Interaction (Image Preview)', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {
@@ -537,16 +468,8 @@ test.describe('@public AT_PDP_REV – Product Reviews', () => {
         });
     });
 
-    /**
-     * AT_PDP_REV_008: Verify Review Tags
-     * Steps: Verify tags like "Good price", "Fast shipping"
-     * Verify (Visual Detailed):
-     *   1. Shape: Rounded corners (Pill shape)
-     *   2. Spacing: Clear distance between tags (not sticking together)
-     *   3. Position: Located directly below the height/weight parameters line
-     *   Logic: If review has no tags, this area should disappear completely
-     */
-    test('AT_PDP_REV_008 – Verify Review Tags', async ({ authPage: page }) => {
+   // TmsLink AT_PDP_029
+    test('AT_PDP_029 – Verify Review Tags', async ({ authPage: page }) => {
         const pdp = new ProductDetailPage(page);
 
         await test.step('1. Access PDP', async () => {

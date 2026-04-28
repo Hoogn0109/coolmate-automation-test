@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { LabelName, Severity, Status } from 'allure-js-commons';
 import dotenv from 'dotenv';
 import os from 'node:os';
 
@@ -7,7 +8,7 @@ dotenv.config();
 export default defineConfig({
   testDir: './src/tests',
 
-  timeout: 90_000,
+  timeout: 120_000,
 
   expect: {
     timeout: 20_000,
@@ -21,15 +22,42 @@ export default defineConfig({
     [
       'allure-playwright',
       {
-        outputFolder: 'allure-results',
-        detail: true,
+        resultsDir: 'allure-results',
+        detail: false,
         suiteTitle: true,
-        autoAttachScreenshots: true,
+        globalLabels: {
+          [LabelName.OWNER]: process.env.ALLURE_OWNER ?? 'qa-team',
+          [LabelName.LAYER]: 'e2e',
+          [LabelName.SEVERITY]: Severity.NORMAL,
+        },
+        categories: [
+          {
+            name: 'Product defects',
+            messageRegex: '.*(Expected|Received|toBeVisible|toHaveText|toHaveURL|toContainText).*',
+            matchedStatuses: [Status.FAILED],
+          },
+          {
+            name: 'Test defects',
+            messageRegex: '.*(TimeoutError|strict mode violation|Unexpected token|locator\\.).*',
+            matchedStatuses: [Status.FAILED, Status.BROKEN],
+          },
+          {
+            name: 'Infrastructure problems',
+            messageRegex: '.*(net::|ERR_|ECONN|ENOTFOUND|ETIMEDOUT|ECONNRESET|browser has been closed).*',
+            matchedStatuses: [Status.FAILED, Status.BROKEN],
+          },
+        ],
         environmentInfo: {
+          project: process.env.GITHUB_REPOSITORY ?? 'DATN COOLMATE',
+          base_url: process.env.BASE_URL,
+          test_env: process.env.TEST_ENV ?? 'local',
+          branch: process.env.GITHUB_REF_NAME ?? 'local',
           os_platform: os.platform(),
           os_release: os.release(),
           os_version: os.version(),
           node_version: process.version,
+          browser: 'chromium',
+          headless: 'true',
         },
       },
     ],

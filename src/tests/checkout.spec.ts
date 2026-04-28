@@ -2,9 +2,16 @@
 import { CheckoutPage } from '../pages/checkout.page'
 import { checkoutData } from '../data/checkout.data';
 
-// CART DISPLAY & PRODUCT MANAGEMENT (AT_CHECKOUT_001 ~ AT_CHECKOUT_010)
-test.describe('@public CO_CART – Cart Display & Product Management', () => {
+type CheckoutFormValidationCase = (typeof checkoutData.formValidationCases)[number];
+type CheckoutExtraInfoInputCase = (typeof checkoutData.extraInfoInputCases)[number];
+type CheckoutCodeEntryCase =
+  | (typeof checkoutData.checkoutCodeEntryCases)[number]
+  | (typeof checkoutData.voucherPanelCodeCases)[number];
 
+// CART DISPLAY & PRODUCT MANAGEMENT (AT_CHECKOUT_001 ~ AT_CHECKOUT_010)
+test.describe(' @checkout @public CO_CART – Cart Display & Product Management', () => {
+
+  // @TmsLink AT_CHECKOUT_001
   test('AT_CHECKOUT_001 – Display product list in cart', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1. Open page cart/checkout', async () => {
@@ -19,10 +26,11 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
 
     await test.step('3.Verify cart/checkout loads successfully', async () => {
-      await expect(page).toHaveURL(/.*cart.*/, { timeout: 10_000 });
+      await checkout.expectCartUrl();
     });
   });
 
+  // @TmsLink AT_CHECKOUT_002
   test('AT_CHECKOUT_002 – Display order total', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -38,6 +46,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_003
   test('AT_CHECKOUT_003 – Change size or color directly in cart', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -51,6 +60,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_004
   test('AT_CHECKOUT_004 – Increase product quantity in cart', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1. Open cart/checkout', async () => {
@@ -69,6 +79,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_005
   test('AT_CHECKOUT_005 – Decrease product quantity in cart', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await checkout.increaseQuantity(0);
@@ -85,6 +96,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_006
   test('AT_CHECKOUT_006 – Remove a product from cart', async ({ page }) => {
     const checkout = await CheckoutPage.addTwoProductsAndGoToCart(page);
     const itemCountBefore = await checkout.getCartItemCount();
@@ -102,6 +114,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_007
   test('AT_CHECKOUT_007 – Remove all products in cart', async ({ page }) => {
     const checkout = await CheckoutPage.addTwoProductsAndGoToCart(page);
     await test.step('1-2. Remove all products', async () => {
@@ -115,6 +128,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_008
   test('AT_CHECKOUT_008 – Display FOMO message', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1-2. Observe FOMO banner', async () => {
@@ -126,6 +140,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_009
   test('AT_CHECKOUT_009 – Display special offer when order is eligible', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -139,6 +154,7 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_010
   test('AT_CHECKOUT_010 – Add special offer to cart', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     const totalBefore = await checkout.getOrderTotalValue();
@@ -161,8 +177,9 @@ test.describe('@public CO_CART – Cart Display & Product Management', () => {
 });
 
 // CHECKOUT FORM — POLICY, PERSONAL INFO, ADDRESS (AT_CHECKOUT_011 ~ AT_CHECKOUT_025)
-test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () => {
+test.describe('@checkout @public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () => {
 
+  // @TmsLink AT_CHECKOUT_011
   test('AT_CHECKOUT_011 – Policy agreement checkbox displayed by default', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -175,6 +192,7 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_012
   test('AT_CHECKOUT_012 – Enter personal info for delivery (guest)', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1-3. Enter personal information: Title, Full Name, Phone Number', async () => {
@@ -183,60 +201,43 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
         checkoutData.validPhone,
       );
 
-      const nameValue = await checkout.fullNameInput.inputValue();
-      expect(nameValue).toBe(checkoutData.validFullName);
-      const phoneValue = await checkout.phoneInput.inputValue();
-      expect(phoneValue).toBe(checkoutData.validPhone);
+      await checkout.expectPersonalInfoValue(
+        checkoutData.validFullName,
+        checkoutData.validPhone,
+      );
     });
   });
 
-  test('AT_CHECKOUT_013 – Validate invalid Full name', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
+  for (const scenario of checkoutData.formValidationCases) {
+    test(`${scenario.tmsId} – ${scenario.title}`, async ({ page }) => {
+      const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
-    await test.step('1. Enter a full name that is too short', async () => {
-      await checkout.fillFullName(checkoutData.invalidNameTooShort);
+      await test.step(`1. ${scenario.inputStep}`, async () => {
+        await fillCheckoutValidationInput(checkout, scenario);
+      });
+
+      await test.step('2. Click "Submit Order"', async () => {
+        await checkout.clickSubmitOrder();
+      });
+
+      await test.step(`3. ${scenario.verifyStep}`, async () => {
+        await verifyCheckoutValidationError(checkout, scenario);
+        await checkout.expectSubmitBlocked();
+      });
     });
+  }
 
-    await test.step('2. Click "Submit Order"', async () => {
-      await checkout.clickSubmitOrder();
-    });
-
-    await test.step('3.Verify: Display error message at Full Name fiel', async () => {
-      await checkout.expectNameErrorVisible();
-      await checkout.expectSubmitBlocked();
-
-    });
-  });
-
-  test('AT_CHECKOUT_014 – Validate invalid Phone format', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
-
-    await test.step('1. Enter phone number in invalid format', async () => {
-      await checkout.fillFullName(checkoutData.validFullName);
-      await checkout.fillPhone(checkoutData.invalidPhone);
-    });
-
-    await test.step('2. Click "Submit Order"', async () => {
-      await checkout.clickSubmitOrder();
-    });
-
-    await test.step('3. Verify: Display error message at Phone Number field', async () => {
-      await checkout.expectPhoneErrorVisible();
-      await checkout.expectSubmitBlocked();
-
-    });
-  });
-
+  // @TmsLink AT_CHECKOUT_015
   test('AT_CHECKOUT_015 – Enter Email when not logged in', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Enter Email into Email field', async () => {
       await checkout.fillEmail(checkoutData.validEmail);
-      const emailValue = await checkout.emailInput.inputValue();
-      expect(emailValue).toBe(checkoutData.validEmail);
+      await checkout.expectEmailValue(checkoutData.validEmail);
     });
   });
 
+  // @TmsLink AT_CHECKOUT_016
   test('AT_CHECKOUT_016 – Submit with empty Email in guest flow', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -259,6 +260,7 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_017
   test('AT_CHECKOUT_017 – Auto-fill Email when logged in', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -267,6 +269,7 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_018
   test('AT_CHECKOUT_018 – Email is read-only when logged in', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -275,6 +278,7 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_019
   test('AT_CHECKOUT_019 – Auto-fill Full name and Phone when logged in', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -285,6 +289,7 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_020
   test('AT_CHECKOUT_020 – Auto-fill Address when logged in', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -295,6 +300,7 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_021
   test('AT_CHECKOUT_021 – Edit auto-filled address', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -302,12 +308,12 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
       const newAddress = '789 New Street, District 3';
       const updatedValue = await checkout.editAddress(newAddress);
       expect(updatedValue).toBe(newAddress);
-      const value = await checkout.addressInput.inputValue();
-      expect(value).toBe(newAddress);
+      await checkout.expectAddressValue(newAddress);
 
     });
   });
 
+  // @TmsLink AT_CHECKOUT_022
   test('AT_CHECKOUT_022 – Select a saved address', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -322,17 +328,18 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
     });
   });
 
+  // @TmsLink AT_CHECKOUT_023
   test('AT_CHECKOUT_023 – Enter completely new address', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-3. Enter detailed address and select province/city', async () => {
       await checkout.fillAddress(checkoutData.validAddress);
-      const value = await checkout.addressInput.inputValue();
-      expect(value).toBe(checkoutData.validAddress);
+      await checkout.expectAddressValue(checkoutData.validAddress);
 
     });
   });
 
+  // @TmsLink AT_CHECKOUT_024
   test('AT_CHECKOUT_024 – Enter order note', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -344,8 +351,9 @@ test.describe('@public AT_CHECKOUT_FORM – Checkout Form & Personal Info', () =
 });
 
 // RECEIVER & VAT (AT_CHECKOUT_025 ~ AT_CHECKOUT_031)
-test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
+test.describe('@checkout @public CO_EXTRA – Receiver, VAT & CoolClub', () => {
 
+  // @TmsLink AT_CHECKOUT_025
   test('AT_CHECKOUT_025 – Open "Call someone else for delivery" form', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -356,26 +364,21 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('AT_CHECKOUT_026 – Enter receiver info', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
+  for (const scenario of checkoutData.extraInfoInputCases) {
+    test(`${scenario.tmsId} – ${scenario.title}`, async ({ page }) => {
+      const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
-    await test.step('1. Open receiver form', async () => {
-      await checkout.tickReceiverCheckbox();
+      await test.step(`1. ${scenario.openStep}`, async () => {
+        await openCheckoutExtraInfoForm(checkout, scenario);
+      });
+
+      await test.step(`2. ${scenario.inputStep}`, async () => {
+        await fillCheckoutExtraInfo(checkout, scenario);
+      });
     });
+  }
 
-    await test.step('2-3. Enter full name and phone number of the receiver', async () => {
-      await checkout.fillReceiverInfo(
-        checkoutData.receiverName,
-        checkoutData.receiverPhone,
-      );
-
-      const nameValue = await checkout.receiverNameInput.inputValue();
-      expect(nameValue).toBe(checkoutData.receiverName);
-      const phoneValue = await checkout.receiverPhoneInput.inputValue();
-      expect(phoneValue).toBe(checkoutData.receiverPhone);
-    });
-  });
-
+  // @TmsLink AT_CHECKOUT_027
   test('AT_CHECKOUT_027 – Validate invalid receiver info', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -395,6 +398,7 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_028
   test('AT_CHECKOUT_028 – Open VAT form', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -405,27 +409,7 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
-  test('AT_CHECKOUT_029 – Enter VAT info', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
-
-    await test.step('1. Open VAT form', async () => {
-      await checkout.tickVatCheckbox();
-    });
-
-    await test.step('2-4. Enter company name, tax code, address, and email', async () => {
-      await checkout.fillVatInfo(
-        checkoutData.vatCompanyName,
-        checkoutData.vatTaxCode,
-        checkoutData.vatAddress,
-        checkoutData.vatEmail,
-      );
-
-      const companyValue = await checkout.vatCompanyInput.inputValue();
-      expect(companyValue).toBe(checkoutData.vatCompanyName);
-
-    });
-  });
-
+  // @TmsLink AT_CHECKOUT_030
   test('AT_CHECKOUT_030 – Validate missing or incorrect VAT info', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -444,6 +428,7 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_031
   test('AT_CHECKOUT_031 – Display VAT invoice notes', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -461,6 +446,7 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_032
   test('AT_CHECKOUT_032 – Display CoolClub offer', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -474,6 +460,7 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
     });
   });
 
+  // @TmsLink AT_CHECKOUT_033
   test('AT_CHECKOUT_033 – Display 0 VND gift when order is eligible', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -489,8 +476,9 @@ test.describe('@public CO_EXTRA – Receiver, VAT & CoolClub', () => {
 });
 
 // VOUCHER, DISCOUNT & PAYMENT (AT_CHECKOUT_034 ~ AT_CHECKOUT_043)
-test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount & Payment', () => {
+test.describe('@checkout @public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount & Payment', () => {
 
+  // @TmsLink AT_CHECKOUT_034
   test('AT_CHECKOUT_034 – Apply valid voucher', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -507,6 +495,7 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
     });
   });
 
+  // @TmsLink AT_CHECKOUT_035
   test('AT_CHECKOUT_035 – Display ineligible voucher message', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -520,31 +509,17 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
     });
   });
 
-  test('AT_CHECKOUT_036 – Enter discount code', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
+  for (const scenario of checkoutData.checkoutCodeEntryCases) {
+    test(`${scenario.tmsId} – ${scenario.title}`, async ({ page }) => {
+      const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
-    await test.step('1-2. Enter discount code and click APPLY', async () => {
-      await checkout.applyDiscountCode(checkoutData.invalidDiscountCode);
-      await checkout.expectDiscountErrorToast();
-
+      await test.step(`1-2. ${scenario.step}`, async () => {
+        await applyCheckoutCodeAndVerify(checkout, scenario);
+      });
     });
-  });
+  }
 
-  test('AT_CHECKOUT_037 – Enter referral code', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
-
-    await test.step('1-2. Enter referral code and click APPLY', async () => {
-      try {
-        await checkout.applyReferralCode(checkoutData.referralCode);
-        const hasToast = await checkout.toastNotification.isVisible().catch(() => false);
-        const hasReferralSection = await checkout.referralSection.isVisible().catch(() => false);
-        expect(hasToast || hasReferralSection, 'Must have feedback after entering referral code').toBeTruthy();
-      } catch {
-
-      }
-    });
-  });
-
+  // @TmsLink AT_CHECKOUT_038
   test('AT_CHECKOUT_038 – Display payment details', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -554,15 +529,14 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
     });
   });
 
+  // @TmsLink AT_CHECKOUT_039
   test('AT_CHECKOUT_039 – Display saved amount', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-2. Apply voucher and observe savings information', async () => {
       try {
         await checkout.selectVoucher(0);
-        await expect(checkout.savingsAmount).toBeVisible({ timeout: 5_000 });
-        const savingsText = await checkout.savingsAmount.textContent();
-        expect(savingsText, 'Savings amount must contain a monetary value').toMatch(/\d+/);
+        await checkout.expectSavingsAmountVisibleWithCurrency();
 
       } catch {
 
@@ -570,6 +544,7 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
     });
   });
 
+  // @TmsLink AT_CHECKOUT_040
   test('AT_CHECKOUT_040 – Display refunded CoolCash', async ({ page }) => {
     const checkout = await CheckoutPage.loginAndGoToCheckout(page);
 
@@ -584,6 +559,7 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
     });
   });
 
+  // @TmsLink AT_CHECKOUT_041
   test('AT_CHECKOUT_041 – Select default COD and place order', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -592,35 +568,24 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
     });
 
     await test.step('2-3. Verify default payment method is Cash on Delivery', async () => {
-      const codRadio = page.locator('input[type="radio"][value="cod"]').first()
-        .or(page.locator('//label[contains(string(), "COD") or contains(string(), "nhận hàng")]//input[@type="radio"]')).first();
-
-      const isChecked = await codRadio.isChecked({ timeout: 5000 }).catch(() => true);
-      expect(isChecked).toBeTruthy();
-
+      await checkout.expectCodPaymentMethodSelected();
     });
   });
 
+  // @TmsLink AT_CHECKOUT_042
   test('AT_CHECKOUT_042 – Select online payment instead of COD', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Select an online payment method', async () => {
       try {
-        const option = page.locator('//label[contains(string(), "ZaloPay") or contains(string(), "Momo") or contains(string(), "Chuyển khoản")]//input[@type="radio"]').first();
-        if (await option.isVisible({ timeout: 5000 })) {
-          await option.click({ force: true });
-
-          await test.step('2. Verify payment methods are displayed correctly', async () => {
-            const isChecked = await option.isChecked();
-            expect(isChecked, 'Online payment option should be checked').toBeTruthy();
-          });
-        }
+        await checkout.selectFirstOnlinePaymentIfVisible();
       } catch {
       }
     });
 
   });
 
+  // @TmsLink AT_CHECKOUT_043
   test('AT_CHECKOUT_043 – Redirect to online payment screen', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -628,12 +593,9 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
       try {
         await checkout.fillPersonalInfo(checkoutData.validFullName, checkoutData.validPhone);
         await checkout.fillAddress(checkoutData.validAddress);
-        const option = page.locator('//label[contains(string(), "ZaloPay")]//input[@type="radio"]').first();
 
-        if (await option.isVisible({ timeout: 3000 })) {
-          await option.click({ force: true });
-          const submitBtn = page.getByRole('button', { name: /Đặt hàng|Thanh toán/i });
-          await expect(submitBtn).toBeVisible();
+        if (await checkout.selectZaloPayIfVisible()) {
+          await checkout.expectSubmitOrderButtonVisible();
           expect(true, 'Intercept API or Button validation successful').toBeTruthy();
         }
       } catch {
@@ -644,8 +606,9 @@ test.describe('@public AT_CHECKOUT_034 – AT_CHECKOUT_043 – Voucher, Discount
 });
 
 // VALIDATION & FINAL FLOW (AT_CHECKOUT_044 ~ AT_CHECKOUT_048)
-test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Final Checkout Flow', () => {
+test.describe('@checkout @public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Final Checkout Flow', () => {
 
+  // @TmsLink AT_CHECKOUT_044
   test('AT_CHECKOUT_044 – Block order when required info is missing', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
     await test.step('1. Leave all required fields empty', async () => {
@@ -663,6 +626,7 @@ test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Fina
     });
   });
 
+  // @TmsLink AT_CHECKOUT_045
   test('AT_CHECKOUT_045 – Validate phone immediately upon invalid input', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -680,6 +644,7 @@ test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Fina
     });
   });
 
+  // @TmsLink AT_CHECKOUT_046
   test('AT_CHECKOUT_046 – Update total after changing quantity', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -696,6 +661,7 @@ test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Fina
     });
   });
 
+  // @TmsLink AT_CHECKOUT_047
   test('AT_CHECKOUT_047 – Warning for out of stock or price change', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -710,6 +676,7 @@ test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Fina
     });
   });
 
+  // @TmsLink AT_CHECKOUT_048
   test('AT_CHECKOUT_048 – Update total after removing product', async ({ page }) => {
     const checkout = await CheckoutPage.addTwoProductsAndGoToCart(page);
 
@@ -728,8 +695,9 @@ test.describe('@public AT_CHECKOUT_044 – AT_CHECKOUT_048 – Validation & Fina
 });
 
 // VOUCHER PANEL (AT_CHECKOUT_049 ~ AT_CHECKOUT_058)
-test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tests', () => {
+test.describe('@checkout @public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tests', () => {
 
+  // @TmsLink AT_CHECKOUT_049
   test('AT_CHECKOUT_049 – Display suggested voucher list', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -745,6 +713,7 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
     });
   });
 
+  // @TmsLink AT_CHECKOUT_050
   test('AT_CHECKOUT_050 – Ineligible voucher in disabled state', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -758,6 +727,7 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
     });
   });
 
+  // @TmsLink AT_CHECKOUT_051
   test('AT_CHECKOUT_051 – Select valid voucher from list', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -771,6 +741,7 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
     });
   });
 
+  // @TmsLink AT_CHECKOUT_052
   test('AT_CHECKOUT_052 – Apply valid discount code', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -780,40 +751,28 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
         await checkout.expectDiscountApplied();
 
       } else {
-        await expect(checkout.discountCodeInput.first()).toBeVisible({ timeout: 5_000 });
+        await checkout.expectDiscountCodeInputVisible();
       }
     });
   });
 
+  // @TmsLink AT_CHECKOUT_053
   test('AT_CHECKOUT_053 – Remove applied discount code', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1. Select discount voucher (if available)', async () => {
-      const availableVoucher = page.locator('//button[text()="Áp dụng" or contains(text(), "ÁP DỤNG")]')
-        .or(page.locator('//button[contains(text(),"Áp dụng") and not(@disabled)]')).first();
-
-      if (await availableVoucher.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await availableVoucher.click();
-        await checkout.expectDiscountApplied().catch(() => { });
-      } else {
-
-      }
+      await checkout.applyAvailableVoucherIfVisible();
     });
 
     await test.step('2. Click "Remove discount code" and check Toast', async () => {
-      const removeBtn = page.locator('//button[contains(normalize-space(),"Xoá mã") or contains(normalize-space(),"Xóa mã") or contains(normalize-space(),"Hủy mã") or contains(normalize-space(),"Bỏ mã") or contains(@aria-label,"xóa") or contains(@aria-label,"Xóa") or contains(@aria-label,"remove")]').first();
-
-      if (await removeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await removeBtn.click();
-        const toast = page.locator('//*[contains(text(), "Thành công") or contains(text(), "Mã giảm giá đã được xóa")]').first();
-        await expect(toast).toBeVisible({ timeout: 5000 });
-      } else {
-
-        expect(true).toBeTruthy();
+      const removed = await checkout.removeDiscountIfVisibleAndExpectToast();
+      if (!removed) {
+        console.log('No discount was applied — remove button not visible. Skipping removal assertion.');
       }
     });
   });
 
+  // @TmsLink AT_CHECKOUT_054
   test('AT_CHECKOUT_054 – Update payment details after applying code', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -832,24 +791,24 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
     });
   });
 
-  test('AT_CHECKOUT_055 – Error message when applying code fails', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
+  for (const scenario of checkoutData.voucherPanelCodeCases) {
+    test(`${scenario.tmsId} – ${scenario.title}`, async ({ page }) => {
+      const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
-    await test.step('1-2. Enter invalid code and click Apply', async () => {
-      await checkout.applyDiscountCode(checkoutData.invalidDiscountCode);
-      await checkout.expectDiscountErrorToast();
-      await expect(page).toHaveURL(/.*cart.*|.*checkout.*/, { timeout: 3_000 });
-
+      await test.step(`1-3. ${scenario.step}`, async () => {
+        await applyCheckoutCodeAndVerify(checkout, scenario);
+      });
     });
-  });
+  }
 
+  // @TmsLink AT_CHECKOUT_056
   test('AT_CHECKOUT_056 – Upsell gift when eligible', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
     await test.step('1-3. QVerify exclusive offers section is displayed', async () => {
       try {
         await checkout.expectUpsellSectionVisible();
-        await expect(checkout.upsellAddBtn).toBeVisible({ timeout: 5_000 });
+        await checkout.expectUpsellAddButtonVisible();
         await checkout.clickUpsellAdd();
         await checkout.expectCartProductsVisible();
       } catch {
@@ -858,19 +817,7 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
     });
   });
 
-  test('AT_CHECKOUT_057 – Enter referral code', async ({ page }) => {
-    const checkout = await CheckoutPage.addProductAndGoToCart(page);
-
-    await test.step('1-3. Open referral code section and enter code', async () => {
-      try {
-        await checkout.applyReferralCode(checkoutData.referralCode);
-        await expect(checkout.referralInput).toBeVisible({ timeout: 5_000 });
-      } catch {
-
-      }
-    });
-  });
-
+  // @TmsLink AT_CHECKOUT_058
   test('AT_CHECKOUT_058 – Keep other data when applying code fails', async ({ page }) => {
     const checkout = await CheckoutPage.addProductAndGoToCart(page);
 
@@ -884,13 +831,89 @@ test.describe('@public AT_CHECKOUT_049 – AT_CHECKOUT_058 – Voucher Panel Tes
     });
 
     await test.step('3. Verify other fields retain their values', async () => {
-      const nameValue = await checkout.page.getByRole('textbox', { name: 'Họ tên' }).first().inputValue();
-      expect(nameValue, 'Verify full name is retained after failed code application').toBe(checkoutData.validFullName);
-
-      const phoneValue = await checkout.page.getByRole('textbox', { name: 'Số điện thoại' }).first().inputValue();
-      expect(phoneValue, 'Verify phone number is retained after failed code application').toBe(checkoutData.validPhone);
-
+      await checkout.expectPersonalInfoRetained(checkoutData.validFullName, checkoutData.validPhone);
     });
   });
 });
+
+async function fillCheckoutValidationInput(checkout: CheckoutPage, scenario: CheckoutFormValidationCase) {
+  switch (scenario.target) {
+    case 'name':
+      await checkout.fillFullName(scenario.fullName);
+      break;
+    case 'phone':
+      await checkout.fillFullName(scenario.fullName);
+      await checkout.fillPhone(scenario.phone);
+      break;
+  }
+}
+
+async function verifyCheckoutValidationError(checkout: CheckoutPage, scenario: CheckoutFormValidationCase) {
+  switch (scenario.target) {
+    case 'name':
+      await checkout.expectNameErrorVisible();
+      break;
+    case 'phone':
+      await checkout.expectPhoneErrorVisible();
+      break;
+  }
+}
+
+async function openCheckoutExtraInfoForm(checkout: CheckoutPage, scenario: CheckoutExtraInfoInputCase) {
+  switch (scenario.type) {
+    case 'receiver':
+      await checkout.tickReceiverCheckbox();
+      break;
+    case 'vat':
+      await checkout.tickVatCheckbox();
+      break;
+  }
+}
+
+async function fillCheckoutExtraInfo(checkout: CheckoutPage, scenario: CheckoutExtraInfoInputCase) {
+  switch (scenario.type) {
+    case 'receiver':
+      await checkout.fillReceiverInfo(scenario.name, scenario.phone);
+      await checkout.expectReceiverInfoValue(scenario.name, scenario.phone);
+      break;
+    case 'vat':
+      await checkout.fillVatInfo(
+        scenario.companyName,
+        scenario.taxCode,
+        scenario.address,
+        scenario.email,
+      );
+      await checkout.expectVatCompanyValue(scenario.companyName);
+      break;
+  }
+}
+
+async function applyCheckoutCodeAndVerify(checkout: CheckoutPage, scenario: CheckoutCodeEntryCase) {
+  const run = async () => {
+    switch (scenario.type) {
+      case 'discountError':
+        await checkout.applyDiscountCode(scenario.code);
+        await checkout.expectDiscountErrorToast();
+        if ('expectCartOrCheckoutUrl' in scenario && scenario.expectCartOrCheckoutUrl) {
+          await checkout.expectCartOrCheckoutUrl();
+        }
+        break;
+      case 'referralFeedback':
+        await checkout.applyReferralCode(scenario.code);
+        if ('verifyReferralInput' in scenario && scenario.verifyReferralInput) {
+          await checkout.expectReferralInputVisible();
+        } else {
+          await checkout.expectReferralFeedbackVisible();
+        }
+        break;
+    }
+  };
+
+  if ('optional' in scenario && scenario.optional) {
+    await run().catch(() => { });
+    return;
+  }
+
+  await run();
+}
 

@@ -2,6 +2,10 @@ export type CheckoutPaymentMethod = 'cod' | 'zalopay' | 'applePay' | 'momo' | 'v
 
 export type GatewayPaymentOption = 'qr' | 'payLater' | 'internationalCard' | 'bank';
 
+export type GatewayVerificationTarget = 'orderInfo' | 'qrCode' | 'timer' | 'cancelButton';
+
+export type GatewayOptionExpectation = 'qrCode' | 'cardForm';
+
 export const paymentData = {
   checkoutMethods: {
     cod: {
@@ -67,6 +71,52 @@ export const paymentData = {
       aliases: ['Ngân hàng', 'Bank', 'ATM', 'Napas', 'Thẻ nội địa'],
     },
   } satisfies Record<GatewayPaymentOption, { displayName: string; aliases: string[] }>,
+
+  gatewayVerificationCases: [
+    {
+      tmsId: 'AT_PAYMENT_005',
+      title: 'Display order information on the gateway',
+      target: 'orderInfo',
+      step: 'Verify the order information block',
+    },
+    {
+      tmsId: 'AT_PAYMENT_007',
+      title: 'Display the payment QR code',
+      target: 'qrCode',
+      step: 'Verify the QR code',
+    },
+    {
+      tmsId: 'AT_PAYMENT_008',
+      title: 'Display the countdown timer',
+      target: 'timer',
+      step: 'Verify the timer',
+    },
+    {
+      tmsId: 'AT_PAYMENT_015',
+      title: 'Display the cancel transaction button',
+      target: 'cancelButton',
+      step: 'Verify gateway controls',
+    },
+  ] as const,
+
+  gatewayOptionSelectionCases: [
+    {
+      tmsId: 'AT_PAYMENT_012',
+      title: 'Select QR payment',
+      option: 'qr',
+      expectation: 'qrCode',
+      selectStep: 'Open ZaloPay/QR payment',
+      verifyStep: 'Verify the QR code is displayed for scanning',
+    },
+    {
+      tmsId: 'AT_PAYMENT_013',
+      title: 'Select international card payment',
+      option: 'internationalCard',
+      expectation: 'cardForm',
+      selectStep: 'Click international card',
+      verifyStep: 'Verify the card input form is displayed',
+    },
+  ] as const,
 
   gatewayOrderInfoKeywords: {
     transactionCode: /mã giao dịch|mã đơn|đơn hàng|transaction|order|code/i,
