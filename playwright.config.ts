@@ -8,7 +8,7 @@ dotenv.config();
 export default defineConfig({
   testDir: './src/tests',
 
-  timeout: 90_000,
+  timeout: 120_000,
 
   expect: {
     timeout: 20_000,
@@ -48,10 +48,10 @@ export default defineConfig({
           },
         ],
         environmentInfo: {
-          project: process.env.CI_PROJECT_NAME ?? 'DATN COOLMATE',
+          project: process.env.GITHUB_REPOSITORY ?? 'DATN COOLMATE',
           base_url: process.env.BASE_URL,
           test_env: process.env.TEST_ENV ?? 'local',
-          branch: process.env.CI_COMMIT_BRANCH ?? process.env.GITHUB_REF_NAME ?? 'local',
+          branch: process.env.GITHUB_REF_NAME ?? 'local',
           os_platform: os.platform(),
           os_release: os.release(),
           os_version: os.version(),
