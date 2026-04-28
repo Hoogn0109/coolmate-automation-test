@@ -31,7 +31,7 @@ env:
 jobs:
   test:
     timeout-minutes: 70
-    runs-on: self-hosted
+    runs-on: [self-hosted, Windows]
     steps:
     - uses: actions/checkout@v4
 
@@ -44,21 +44,11 @@ jobs:
       run: npm ci
 
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      run: npx playwright install chromium
 
     - name: Check required env
-      shell: bash
       run: |
-        missing=0
-        for name in BASE_URL USER_NAME PASS_WORD PHONE_NUMBER PDP_URL PDP_URL_PAYMENT; do
-          if [ -z "${!name}" ]; then
-            echo "Missing required env: $name"
-            missing=1
-          else
-            echo "Configured env: $name"
-          fi
-        done
-        exit $missing
+        node -e "const required=['BASE_URL','USER_NAME','PASS_WORD','PHONE_NUMBER','PDP_URL','PDP_URL_PAYMENT']; const missing=required.filter((name)=>!process.env[name]); for (const name of required) console.log((missing.includes(name) ? 'Missing required env' : 'Configured env') + ': ' + name); if (missing.length) process.exit(1);"
 
     - name: Run Playwright tests
       run: npx playwright test
@@ -66,17 +56,7 @@ jobs:
     - name: Write Allure executor metadata
       if: always()
       run: |
-        mkdir -p allure-results
-        cat > allure-results/executor.json <<EOF
-        {
-          "name": "GitHub Actions",
-          "type": "github",
-          "buildName": "#${{ github.run_number }}",
-          "buildOrder": "${{ github.run_number }}",
-          "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-          "reportUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        }
-        EOF
+        node -e "const fs=require('fs'); fs.mkdirSync('allure-results',{recursive:true}); fs.writeFileSync('allure-results/executor.json', JSON.stringify({name:'GitHub Actions',type:'github',buildName:'#${{ github.run_number }}',buildOrder:'${{ github.run_number }}',buildUrl:'${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',reportUrl:'${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'}, null, 2));"
 
     - name: Generate Allure Report
       if: always()
