@@ -2,12 +2,16 @@ import { expect, test } from '@playwright/test';
 import { PaymentPage } from '../pages/payment.page';
 import { paymentData } from '../data/payment.data';
 
-test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
-  test('AT_PAYMENT-001 - Display payment methods in the cart', async ({ page }) => {
-    const { payment } = await PaymentPage.openCheckoutWithProduct(page);
+type GatewayVerificationCase = (typeof paymentData.gatewayVerificationCases)[number];
+type GatewayOptionSelectionCase = (typeof paymentData.gatewayOptionSelectionCases)[number];
 
+test.describe(' @payment @public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
+
+  // @TmsLink AT_PAYMENT_001
+  test('AT_PAYMENT_001 - Display payment methods in the cart', async ({ page }) => {
+    const { checkout, payment } = await PaymentPage.openCheckoutWithProduct(page);
     await test.step('1. Open the cart/checkout page', async () => {
-      await expect(page).toHaveURL(/.*cart.*/, { timeout: 15_000 });
+      await checkout.expectCartUrl(15_000);
     });
 
     await test.step('2. Scroll to the payment method section', async () => {
@@ -19,7 +23,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-002 - User selects the ZaloPay payment method', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_002
+  test('AT_PAYMENT_002 - User selects the ZaloPay payment method', async ({ page }) => {
     const { payment } = await PaymentPage.openCheckoutWithProduct(page);
 
     await test.step('1. Find the ZaloPay payment row', async () => {
@@ -36,7 +41,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-003 - Only one payment method can be selected at a time', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_003
+  test('AT_PAYMENT_003 - Only one payment method can be selected at a time', async ({ page }) => {
     const { payment } = await PaymentPage.openCheckoutWithProduct(page);
 
     await test.step('1. Select ZaloPay', async () => {
@@ -53,7 +59,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-004 - Redirect to the payment gateway after placing an order', async ({ page }) => {
+    // @TmsLink AT_PAYMENT_004
+  test('AT_PAYMENT_004 - Redirect to the payment gateway after placing an order', async ({ page }) => {
     const { checkout, payment } = await PaymentPage.openLoggedInCheckoutWithProduct(page);
 
     await test.step('1. Select ZaloPay', async () => {
@@ -67,15 +74,18 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-005 - Display order information on the gateway', async ({ page }) => {
-    const { gateway } = await PaymentPage.submitGatewayOrder(page);
+  for (const scenario of paymentData.gatewayVerificationCases) {
+    test(`${scenario.tmsId} - ${scenario.title}`, async ({ page }) => {
+      const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
-    await test.step('1. Verify the order information block', async () => {
-      await gateway.expectGatewayOrderInfoVisible();
+      await test.step(`1. ${scenario.step}`, async () => {
+        await verifyGatewayState(gateway, scenario);
+      });
     });
-  });
+  }
 
-  test('AT_PAYMENT-006 - Gateway amount matches checkout total', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_006
+  test('AT_PAYMENT_006 - Gateway amount matches checkout total', async ({ page }) => {
     const { checkoutTotal, gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Capture the checkout total', async () => {
@@ -87,23 +97,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-007 - Display the payment QR code', async ({ page }) => {
-    const { gateway } = await PaymentPage.submitGatewayOrder(page);
-
-    await test.step('1. Verify the QR code', async () => {
-      await gateway.expectQrCodeVisible();
-    });
-  });
-
-  test('AT_PAYMENT-008 - Display the countdown timer', async ({ page }) => {
-    const { gateway } = await PaymentPage.submitGatewayOrder(page);
-
-    await test.step('1. Verify the timer', async () => {
-      await gateway.expectTimerVisible();
-    });
-  });
-
-  test('AT_PAYMENT-009 - Countdown decreases over time', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_009
+  test('AT_PAYMENT_009 - Countdown decreases over time', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Capture the timer', async () => {
@@ -115,7 +110,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-010 - Refresh does not reset the timer', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_010
+  test('AT_PAYMENT_010 - Refresh does not reset the timer', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Capture the timer', async () => {
@@ -127,7 +123,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-011 - Display payment options on the gateway', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_011
+  test('AT_PAYMENT_011 - Display payment options on the gateway', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Verify the ZaloPay gateway payment option list', async () => {
@@ -140,31 +137,22 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-012 - Select QR payment', async ({ page }) => {
-    const { gateway } = await PaymentPage.submitGatewayOrder(page);
+  for (const scenario of paymentData.gatewayOptionSelectionCases) {
+    test(`${scenario.tmsId} - ${scenario.title}`, async ({ page }) => {
+      const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
-    await test.step('1. Open ZaloPay/QR payment', async () => {
-      await gateway.clickGatewayPaymentOption('qr');
+      await test.step(`1. ${scenario.selectStep}`, async () => {
+        await gateway.clickGatewayPaymentOption(scenario.option);
+      });
+
+      await test.step(`2. ${scenario.verifyStep}`, async () => {
+        await verifyGatewayOptionSelection(gateway, scenario);
+      });
     });
+  }
 
-    await test.step('2. Verify the QR code is displayed for scanning', async () => {
-      await gateway.expectQrCodeVisible();
-    });
-  });
-
-  test('AT_PAYMENT-013 - Select international card payment', async ({ page }) => {
-    const { gateway } = await PaymentPage.submitGatewayOrder(page);
-
-    await test.step('1. Click international card', async () => {
-      await gateway.clickGatewayPaymentOption('internationalCard');
-    });
-
-    await test.step('2. Verify the card input form is displayed', async () => {
-      await gateway.expectCardFormVisible();
-    });
-  });
-
-  test('AT_PAYMENT-014 - Prevent payment when card information is missing', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_014
+  test('AT_PAYMENT_014 - Prevent payment when card information is missing', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Open the international card form', async () => {
@@ -177,15 +165,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-015 - Display the cancel transaction button', async ({ page }) => {
-    const { gateway } = await PaymentPage.submitGatewayOrder(page);
-
-    await test.step('1. Verify gateway controls', async () => {
-      await gateway.expectCancelButtonVisible();
-    });
-  });
-
-  test('AT_PAYMENT-016 - Clicking cancel displays a confirmation popup', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_016
+  test('AT_PAYMENT_016 - Clicking cancel displays a confirmation popup', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Click cancel', async () => {
@@ -197,7 +178,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-017 - Confirm transaction cancellation', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_017
+  test('AT_PAYMENT_017 - Confirm transaction cancellation', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Open the cancel popup', async () => {
@@ -214,7 +196,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-018 - Close the popup without canceling the transaction', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_018
+  test('AT_PAYMENT_018 - Close the popup without canceling the transaction', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Open the cancel popup', async () => {
@@ -231,7 +214,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-021 - Display status after transaction cancellation', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_019
+  test('AT_PAYMENT_019 - Display status after transaction cancellation', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Cancel the transaction', async () => {
@@ -245,7 +229,8 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 
-  test('AT_PAYMENT-022 - Provide navigation after failed payment', async ({ page }) => {
+  // @TmsLink AT_PAYMENT_020
+  test('AT_PAYMENT_020 - Provide navigation after failed payment', async ({ page }) => {
     const { gateway } = await PaymentPage.submitGatewayOrder(page);
 
     await test.step('1. Create a failed/canceled state from the gateway', async () => {
@@ -260,3 +245,31 @@ test.describe('@public PAY_PAYMENT - Payment Flow Core Test Cases', () => {
     });
   });
 });
+
+async function verifyGatewayState(gateway: PaymentPage, scenario: GatewayVerificationCase) {
+  switch (scenario.target) {
+    case 'orderInfo':
+      await gateway.expectGatewayOrderInfoVisible();
+      break;
+    case 'qrCode':
+      await gateway.expectQrCodeVisible();
+      break;
+    case 'timer':
+      await gateway.expectTimerVisible();
+      break;
+    case 'cancelButton':
+      await gateway.expectCancelButtonVisible();
+      break;
+  }
+}
+
+async function verifyGatewayOptionSelection(gateway: PaymentPage, scenario: GatewayOptionSelectionCase) {
+  switch (scenario.expectation) {
+    case 'qrCode':
+      await gateway.expectQrCodeVisible();
+      break;
+    case 'cardForm':
+      await gateway.expectCardFormVisible();
+      break;
+  }
+}

@@ -1,9 +1,13 @@
-export const searchPage = {
+export const SEARCH_LOCATORS = {
+
+  // Search popup
   searchPopup: "header input[placeholder='Tìm kiếm...']",
   inputSearch: "//div[@role='dialog']//input[@placeholder='Tìm kiếm...']",
   btnSearchPopup: "header input[placeholder*='Tìm kiếm'], header button:has(img[alt*='search'])",
-  btnSearch: "//div[@role='dialog']//*[name()='svg' and contains(@class,'lucide-search')]",
+  btnSearch: "//div[@role='dialog']//button[.//*[name()='svg' and contains(@class,'lucide-search')]]",
   btnClearSearch: "(//*[name()='svg'][@class='lucide lucide-x'])[1]",
+
+  // More button and social media links
   btnSeeMore: "(//button[normalize-space()='Xem thêm'])[1]",
   btnContribute: "(//a[contains(text(),'Đóng góp ý kiến')])[1]",
   btnFacebook: "//a[contains(@href, 'facebook.com')]",
@@ -16,10 +20,12 @@ export const searchPage = {
   txtSuggestionItems: "//h3[contains(.,'Gợi ý tìm kiếm')]/following-sibling::div//*[self::a or self::button]",
   txtResult: "//h3[contains(normalize-space(), 'Kết quả tìm kiếm')]",
   resultProduct: "(//h3[contains(normalize-space(), 'Kết quả tìm kiếm')]/following-sibling::div//*[self::a or self::button])[1]",
+  viewAllButton: "//a[.//button[contains(normalize-space(),'Xem tất cả')]]",
+
+  //Product details in search result
   imgProduct: "(//h3[contains(normalize-space(), 'Kết quả tìm kiếm')]/following-sibling::div//img)[1]",
   DescriptionProduct: "(//h3[contains(normalize-space(), 'Kết quả tìm kiếm')]/following-sibling::div//p[contains(@class,'line-clamp-2')])[1]",
   PriceProduct: "(//h3[contains(.,'Kết quả tìm kiếm')]/following::div[contains(@class,'mt-auto')]//span[contains(text(),'đ')])[1]",
-  viewAllButton: "//a[.//button[contains(normalize-space(),'Xem tất cả')]]",
   searchResultGrid: "//div[@role='dialog']//div[contains(@class, 'grid')]",
   searchResultItems: "//div[@role='dialog']//a[contains(@href, '/product/')]",
   trendingKeywordTitle: "//p[contains(normalize-space(),'Từ khóa nổi bật')]",

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { CartPage } from '../pages/cart.page';
 
-test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
+test.describe(' @cart @public AT_CART_XX – Add to Cart Scenarios', () => {
 
+  // @TmsLink AT_CART_001
   test('AT_CART_001 – Add product to cart successfully', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -27,6 +28,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_002
   test('AT_CART_002 – Add same product again (same color + size) → increase quantity', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -53,6 +55,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_003
   test('AT_CART_003 – Add same product again but different size → create new item', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -83,6 +86,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_004
   test('AT_CART_004 – Click "Thêm vào giỏ" rapidly more than 1 time', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -106,6 +110,8 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+
+  // @TmsLink AT_CART_005
   test('AT_CART_005 – System error when adding product to cart', async ({ page }) => {
     const cartPage = new CartPage(page);
     await page.route('**/api/**', async route => {
@@ -139,6 +145,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_006
   test('AT_CART_006 – Cart badge displays the correct quantity', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -161,6 +168,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_007
   test('AT_CART_007 – Popup displays correct product information', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -173,19 +181,11 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
 
     await test.step('3. Verify: Toast popup displays correct product information', async () => {
-      await cartPage.expectSuccessToastVisible();
-      const toastParent = page.locator('text="Thêm vào giỏ hàng thành công"')
-        .locator('xpath=ancestor::div[contains(@class,"fixed")]');
-      const toastContent = await toastParent.first().textContent({ timeout: 5000 }).catch(() => null);
-      if (toastContent) {
-        expect(toastContent).toBeTruthy();
-        expect(toastContent).toMatch(/\d+\.\d+đ/);
-      } else {
-
-      }
+      await cartPage.expectToastProductInformationVisible();
     });
   });
 
+  // @TmsLink AT_CART_008
   test('AT_CART_008 – Click "Xem giỏ hàng" button in popup', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -200,10 +200,11 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
 
     await test.step('3. Verify: Navigate to cart page', async () => {
-      await expect(page).toHaveURL(/.*cart.*/, { timeout: 10_000 });
+      await cartPage.expectCartUrl();
     });
   });
 
+  // @TmsLink AT_CART_009
   test('AT_CART_009 – Close popup by clicking the X button', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -218,11 +219,11 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
 
     await test.step('3. Verify: Popup disappears, back to PDP', async () => {
-      await expect(cartPage.successToast).not.toBeVisible({ timeout: 5_000 });
-      await expect(cartPage.addToCartBtn).toBeVisible();
+      await cartPage.expectToastDismissedAndPdpReady();
     });
   });
 
+  //TmsLink AT_CART_010
   test('AT_CART_010 – Unregistered user still keeps cart', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -236,9 +237,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     const countBeforeReload = await cartPage.getCartItemCount();
 
     await test.step('2. Reload page', async () => {
-      await page.reload();
-      await cartPage.addToCartBtn.waitFor({ state: 'visible', timeout: 10_000 });
-      await cartPage.dismissCoolClubPopup();
+      await cartPage.reloadAndExpectPdpReady();
       await expect.poll(() => cartPage.getCartItemCount(), { timeout: 10000 }).toBeGreaterThan(0);
     });
 
@@ -248,6 +247,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_011
   test('AT_CART_011 – System automatically selects a variant when entering the page', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -260,6 +260,7 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
     });
   });
 
+  // @TmsLink AT_CART_012
   test('AT_CART_012 – Add to cart button is enabled and not disabled', async ({ page }) => {
     const cartPage = new CartPage(page);
 
@@ -274,9 +275,10 @@ test.describe('@public AT_CART_XX – Add to Cart Scenarios', () => {
 
 });
 
-test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
+test.describe('@cart @public AT_CART_XX – Quick Add to Cart Scenarios', () => {
 
-  test('AT_QCART_001 – Show "Quick Add to Cart" button when hover', async ({ page }) => {
+  // @TmsLink AT_CART_013
+  test('AT_CART_013 – Show "Quick Add to Cart" button when hover', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Navigate to product listing page and hover over a product', async () => {
@@ -289,7 +291,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_002 – Show size list when hover', async ({ page }) => {
+  // @TmsLink AT_CART_014
+  test('AT_CART_014 – Show size list when hover', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -302,7 +305,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_003 – Out of stock size is disabled', async ({ page }) => {
+  // @TmsLink AT_CART_015
+  test('AT_CART_015 – Out of stock size is disabled', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -319,7 +323,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_004 – Click to select size → add product to cart', async ({ page }) => {
+  // @TmsLink AT_CART_016
+  test('AT_CART_016 – Click to select size → add product to cart', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -341,7 +346,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_005 – Add same size multiple times → increase quantity', async ({ page }) => {
+  // @TmsLink AT_CART_017
+  test('AT_CART_017 – Add same size multiple times → increase quantity', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -369,7 +375,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_006 – Click quickly multiple times', async ({ page }) => {
+  // @TmsLink AT_CART_018
+  test('AT_CART_018 – Click quickly multiple times', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -397,7 +404,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_007 – Do not display quick add when not hovering', async ({ page }) => {
+  // @TmsLink AT_CART_019
+  test('AT_CART_019 – Do not display quick add when not hovering', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -410,7 +418,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_008 – Click outside size area → do not add', async ({ page }) => {
+  // @TmsLink AT_CART_020
+  test('AT_CART_020 – Click outside size area → do not add', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {
@@ -431,7 +440,8 @@ test.describe('@public AT_QCART_XX – Quick Add to Cart Scenarios', () => {
     });
   });
 
-  test('AT_QCART_009 – Badge updates correctly when adding from quick add', async ({ page }) => {
+  // @TmsLink AT_CART_021
+  test('AT_CART_021 – Badge updates correctly when adding from quick add', async ({ page }) => {
     const cartPage = new CartPage(page);
 
     await test.step('1. Hover over a product', async () => {

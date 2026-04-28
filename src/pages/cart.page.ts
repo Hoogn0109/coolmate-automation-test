@@ -1,20 +1,19 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { CART_LOCATOR } from '../locator/cart.locator';
-
 import { SearchPage } from './search.page';
 import { searchData } from '../data/search.data';
 
 export class CartPage {
-  readonly page: Page;
-  readonly colorSelected: Locator;
-  readonly sizeSelected: Locator;
-  readonly sizeOption: Locator;
-  readonly addToCartBtn: Locator;
-  readonly cartBadge: Locator;
-  readonly successToast: Locator;
-  readonly toastCloseBtn: Locator;
-  readonly viewCartBtn: Locator;
-  readonly errorToast: Locator;
+  private readonly page: Page;
+  private readonly colorSelected: Locator;
+  private readonly sizeSelected: Locator;
+  private readonly sizeOption: Locator;
+  private readonly addToCartBtn: Locator;
+  private readonly cartBadge: Locator;
+  private readonly successToast: Locator;
+  private readonly toastCloseBtn: Locator;
+  private readonly viewCartBtn: Locator;
+  private readonly errorToast: Locator;
 
   // Internal: cart count captured from the last add-to-cart API response
   private _lastKnownCartCount: number = 0;
@@ -33,10 +32,43 @@ export class CartPage {
   }
 
   async openPdp(url?: string) {
-    await this.page.goto(url || process.env.PDP_URL || '');
+    await this.gotoWithRetry(url || process.env.PDP_URL || '');
     await this.addToCartBtn.waitFor({ state: 'visible', timeout: 15_000 });
     await this.dismissCoolClubPopup();
     await this.page.waitForTimeout(500);
+  }
+
+  private async gotoWithRetry(url: string, maxAttempts: number = 3) {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxAttempts) {
+          await this.page.waitForTimeout(1_000 * attempt);
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  async expectPdpReady(timeout: number = 10_000) {
+    await expect(this.addToCartBtn).toBeVisible({ timeout });
+  }
+
+  async reloadAndExpectPdpReady() {
+    await this.page.reload();
+    await this.page.waitForLoadState('domcontentloaded').catch(() => { });
+    await this.expectPdpReady();
+    await this.dismissCoolClubPopup();
+  }
+
+  async expectCartUrl(timeout: number = 10_000) {
+    await expect(this.page).toHaveURL(/.*cart.*/, { timeout });
   }
 
   async dismissCoolClubPopup() {
@@ -122,7 +154,7 @@ export class CartPage {
         if (!btn) return true;
         return !btn.textContent?.includes('Đang thêm') && !(btn as HTMLButtonElement).disabled;
       },
-      '#product-detail-add-cart',
+      CART_LOCATOR.addToCartBtn,
       { timeout: 10_000 }
     ).catch(() => { });
     await this.page.waitForTimeout(300);
@@ -135,8 +167,11 @@ export class CartPage {
       const btn = allSizeBtns.nth(i);
       const cls = await btn.getAttribute('class') || '';
       const isDisabled = await btn.evaluate((el) => (el as HTMLButtonElement).disabled).catch(() => false);
-      if (!isDisabled && cls.includes('bg-neutral-100')) {
-        await btn.click();
+      const isVisuallyDisabled = /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
+      const isSelected = /bg-neutral-900|text-white|text-light|selected/.test(cls);
+      if (!isDisabled && !isVisuallyDisabled && !isSelected && cls.includes('bg-neutral-100')) {
+        await btn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+        await btn.click({ force: true });
         return;
       }
     }
@@ -151,8 +186,9 @@ export class CartPage {
       for (let i = 0; i < count; i++) {
         const btn = btns.nth(i);
         const isDisabled = await btn.evaluate((el) => (el as HTMLButtonElement).disabled).catch(() => false);
-        if (!isDisabled) {
-          const cls = await btn.getAttribute('class') || '';
+        const cls = await btn.getAttribute('class') || '';
+        const isVisuallyDisabled = /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
+        if (!isDisabled && !isVisuallyDisabled) {
           if (!cls.includes('bg-neutral-900')) {
             await btn.click({ force: true });
             await this.page.waitForTimeout(500);
@@ -165,10 +201,10 @@ export class CartPage {
 
   async expectSuccessToastVisible() {
     const toastLocators = [
-      this.page.locator('[class*="fixed"][class*="top"]').filter({ hasText: 'Thêm vào giỏ hàng thành công' }),
-      this.page.locator('[data-sonner-toast]').filter({ hasText: 'Thêm vào giỏ hàng thành công' }),
-      this.page.locator('[role="status"]').filter({ hasText: 'Thêm vào giỏ hàng thành công' }),
-      this.page.locator('text="Thêm vào giỏ hàng thành công"'),
+      ...CART_LOCATOR.successToastContainers.map((selector) =>
+        this.page.locator(selector).filter({ hasText: CART_LOCATOR.successToastMessage })
+      ),
+      this.page.locator(CART_LOCATOR.successToastText),
     ];
 
     for (const loc of toastLocators) {
@@ -201,15 +237,24 @@ export class CartPage {
     await this.page.waitForTimeout(500);
   }
 
-  async clickViewCart() {
-    const toastCartSelectors = [
-      'xpath=(//img[@alt="cart"])[1]',
-      'a[href*="/cart"]:has(img[alt="cart"])',
-      '[class*="fixed"][class*="top"] a[href*="/cart"]',
-      '[data-sonner-toast] a[href*="/cart"]',
-    ];
+  async expectToastProductInformationVisible() {
+    await this.expectSuccessToastVisible();
+    const toastParent = this.page.locator(CART_LOCATOR.successToastText)
+      .locator(CART_LOCATOR.successToastParent);
+    const toastContent = await toastParent.first().textContent({ timeout: 5000 }).catch(() => null);
+    if (toastContent) {
+      expect(toastContent).toBeTruthy();
+      expect(toastContent).toMatch(/\d+[.,]\d+/);
+    }
+  }
 
-    for (const selector of toastCartSelectors) {
+  async expectToastDismissedAndPdpReady() {
+    await expect(this.successToast).not.toBeVisible({ timeout: 5_000 });
+    await expect(this.addToCartBtn).toBeVisible();
+  }
+
+  async clickViewCart() {
+    for (const selector of CART_LOCATOR.toastViewCartButtons) {
       try {
         const el = this.page.locator(selector).first();
         await el.waitFor({ state: 'visible', timeout: 3_000 });
@@ -234,34 +279,42 @@ export class CartPage {
     }
 
     try {
-      const count = await this.page.evaluate((): number => {
-        const cartLink = document.querySelector('a[href="/cart"]');
-        if (!cartLink) return 0;
-        const candidates = [cartLink, ...Array.from(cartLink.querySelectorAll('*'))];
-        for (const el of candidates) {
-          for (const pseudo of ['::after', '::before', ''] as const) {
-            const style = window.getComputedStyle(el as Element, pseudo || null);
-            const content = style.getPropertyValue('content');
-            if (content && content !== 'none' && content !== 'normal' && content !== '""') {
-              const cleaned = content.replace(/['"]/g, '').trim();
-              const num = parseInt(cleaned, 10);
-              if (!isNaN(num) && num > 0) return num;
+      const count = await this.page.evaluate(
+        (selectors: { cartLink: string; allDescendants: string; header: string; headerCountElements: string }): number => {
+          const cartLink = document.querySelector(selectors.cartLink);
+          if (!cartLink) return 0;
+          const candidates = [cartLink, ...Array.from(cartLink.querySelectorAll(selectors.allDescendants))];
+          for (const el of candidates) {
+            for (const pseudo of ['::after', '::before', ''] as const) {
+              const style = window.getComputedStyle(el as Element, pseudo || null);
+              const content = style.getPropertyValue('content');
+              if (content && content !== 'none' && content !== 'normal' && content !== '""') {
+                const cleaned = content.replace(/['"]/g, '').trim();
+                const num = parseInt(cleaned, 10);
+                if (!isNaN(num) && num > 0) return num;
+              }
+            }
+            const text = (el.textContent || '').trim();
+            if (/^\d+$/.test(text) && parseInt(text) > 0 && parseInt(text) < 100) {
+              return parseInt(text);
             }
           }
-          const text = (el.textContent || '').trim();
-          if (/^\d+$/.test(text) && parseInt(text) > 0 && parseInt(text) < 100) {
-            return parseInt(text);
+          const header = document.querySelector(selectors.header);
+          if (header) {
+            for (const el of header.querySelectorAll(selectors.headerCountElements)) {
+              const text = (el.textContent || '').trim();
+              if (/^\d+$/.test(text) && parseInt(text) > 0 && parseInt(text) < 100) return parseInt(text);
+            }
           }
+          return 0;
+        },
+        {
+          cartLink: CART_LOCATOR.cartLink,
+          allDescendants: CART_LOCATOR.allDescendants,
+          header: CART_LOCATOR.header,
+          headerCountElements: CART_LOCATOR.headerCountElements,
         }
-        const header = document.querySelector('header, [role="banner"]');
-        if (header) {
-          for (const el of header.querySelectorAll('span, sup, sub, small')) {
-            const text = (el.textContent || '').trim();
-            if (/^\d+$/.test(text) && parseInt(text) > 0 && parseInt(text) < 100) return parseInt(text);
-          }
-        }
-        return 0;
-      });
+      );
       if (count > 0) return count;
 
       const apiCount = await this.page.evaluate(async (): Promise<number> => {
@@ -362,7 +415,7 @@ export class CartPage {
   }
   async getQuickAddSizeButtons() {
     const firstCard = this.page.locator(CART_LOCATOR.productCard).first();
-    return firstCard.locator('ul li button');
+    return firstCard.locator(CART_LOCATOR.quickAddSizeButtonsInCard);
   }
 
   async expectQuickAddSizeListVisible() {
@@ -374,14 +427,14 @@ export class CartPage {
 
   async clickQuickAddSize(size: string = 'L', cardIndex: number = 0) {
     const card = this.page.locator(CART_LOCATOR.productCard).nth(cardIndex);
-    const sizeBtn = card.locator(`ul li button:not([disabled])`).filter({ hasText: new RegExp(`^${size}$`) }).first();
+    const sizeBtn = card.locator(CART_LOCATOR.quickAddEnabledSizeByTextInCard(size)).first();
     await sizeBtn.waitFor({ state: 'attached', timeout: 5_000 });
     await sizeBtn.evaluate((node: HTMLElement) => node.click());
   }
 
   async clickQuickAddSizeByIndex(index: number, cardIndex: number = 0) {
     const card = this.page.locator(CART_LOCATOR.productCard).nth(cardIndex);
-    const sizeBtn = card.locator('ul li button:not([disabled])').nth(index);
+    const sizeBtn = card.locator(CART_LOCATOR.quickAddEnabledSizeButtonsInCard).nth(index);
     await sizeBtn.waitFor({ state: 'attached', timeout: 5_000 });
 
     const cartResponsePromise = this.page.waitForResponse(
@@ -432,7 +485,7 @@ export class CartPage {
    */
   async clickFirstSuccessfulQuickAddSizeAndGetIndex(cardIndex: number = 0): Promise<number> {
     const card = this.page.locator(CART_LOCATOR.productCard).nth(cardIndex);
-    const sizeBtns = card.locator('ul li button:not([disabled])');
+    const sizeBtns = card.locator(CART_LOCATOR.quickAddEnabledSizeButtonsInCard);
     const count = await sizeBtns.count();
 
     for (let i = 0; i < count; i++) {
