@@ -30,7 +30,7 @@ env:
 
 jobs:
   test:
-    timeout-minutes: 60
+    timeout-minutes: 70
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -45,6 +45,20 @@ jobs:
 
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+
+    - name: Check required env
+      shell: bash
+      run: |
+        missing=0
+        for name in BASE_URL USER_NAME PASS_WORD PHONE_NUMBER PDP_URL PDP_URL_PAYMENT; do
+          if [ -z "${!name}" ]; then
+            echo "Missing required env: $name"
+            missing=1
+          else
+            echo "Configured env: $name"
+          fi
+        done
+        exit $missing
 
     - name: Run Playwright tests
       run: npx playwright test
