@@ -16,6 +16,7 @@ export default defineConfig({
 
   fullyParallel: true,
   workers: 2,
+  retries: process.env.CI ? 1 : 0,
 
   reporter: [
     ['list'],
