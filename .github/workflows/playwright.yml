@@ -46,15 +46,6 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install chromium
 
-    - name: Restore Allure history
-      uses: actions/cache/restore@v4
-      with:
-        path: allure-history
-        key: allure-history-${{ github.ref_name }}-${{ github.run_number }}-${{ github.run_attempt }}
-        restore-keys: |
-          allure-history-${{ github.ref_name }}-
-          allure-history-
-
     - name: Check required env
       run: |
         node -e "const required=['BASE_URL','USER_NAME','PASS_WORD','PHONE_NUMBER','PDP_URL','PDP_URL_PAYMENT']; const missing=required.filter((name)=>!process.env[name]); for (const name of required) console.log((missing.includes(name) ? 'Missing required env' : 'Configured env') + ': ' + name); if (missing.length) process.exit(1);"
@@ -65,44 +56,28 @@ jobs:
     - name: Write Allure executor metadata
       if: always()
       run: |
-        node -e "const fs=require('fs'); fs.mkdirSync('allure-results',{recursive:true}); fs.writeFileSync('allure-results/executor.json', JSON.stringify({name:'GitHub Actions',type:'github',buildName:'#${{ github.run_number }}',buildOrder:Number('${{ github.run_number }}'),buildUrl:'${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',reportName:'Allure Report #${{ github.run_number }}',reportUrl:'${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'}, null, 2));"
+        node -e "const fs=require('fs'); const runNumber=Number('${{ github.run_number }}'); const runAttempt=Number('${{ github.run_attempt }}'); const buildName='#'+runNumber+'.'+runAttempt; fs.mkdirSync('allure-results',{recursive:true}); fs.writeFileSync('allure-results/executor.json', JSON.stringify({name:'GitHub Actions',type:'github',buildName,buildOrder:(runNumber*1000)+runAttempt,buildUrl:'${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',reportName:'Allure Report '+buildName,reportUrl:'${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'}, null, 2));"
 
-    - name: Copy Allure history
+    - name: Download previous Allure history
       if: always()
       shell: powershell
       run: |
-        if ((Test-Path "allure-history") -and (Get-ChildItem "allure-history" -Force -ErrorAction SilentlyContinue)) {
-          New-Item -ItemType Directory -Force "allure-results" | Out-Null
-          if (Test-Path "allure-results/history") {
-            Remove-Item -Recurse -Force "allure-results/history"
+        $historyUrl = "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/history"
+        $historyPath = "allure-results/history"
+        New-Item -ItemType Directory -Force $historyPath | Out-Null
+        $files = @("history.json", "history-trend.json", "duration-trend.json", "retry-trend.json", "categories-trend.json")
+        foreach ($file in $files) {
+          try {
+            Invoke-WebRequest -Uri "$historyUrl/$file" -OutFile "$historyPath/$file" -UseBasicParsing
+            Write-Host "Downloaded previous Allure history: $file"
+          } catch {
+            Write-Host "No previous Allure history file: $file"
           }
-          New-Item -ItemType Directory -Force "allure-results/history" | Out-Null
-          Copy-Item -Recurse "allure-history/*" "allure-results/history"
         }
 
     - name: Generate Allure Report
       if: always()
       run: npx allure generate allure-results -o allure-report --clean
-
-    - name: Update Allure history cache folder
-      if: always()
-      shell: powershell
-      run: |
-        if (Test-Path "allure-report/history") {
-          if (Test-Path "allure-history") {
-            Remove-Item -Recurse -Force "allure-history"
-          }
-          Copy-Item -Recurse "allure-report/history" "allure-history"
-        } else {
-          New-Item -ItemType Directory -Force "allure-history" | Out-Null
-        }
-
-    - name: Save Allure history
-      if: always()
-      uses: actions/cache/save@v4
-      with:
-        path: allure-history
-        key: allure-history-${{ github.ref_name }}-${{ github.run_number }}-${{ github.run_attempt }}
 
     - name: Upload Allure Report artifact
       if: always()
