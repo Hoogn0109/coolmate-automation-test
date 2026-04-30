@@ -10,8 +10,8 @@ type SocialRedirectionCase = (typeof searchData.socialRedirectionCases)[number];
 
 test.describe('@search Search Product Test', () => {
 
-  // @TmsLink TC_SEARCH_001
-  test('TC_SEARCH_001: Verify button search', async ({ authPage: page }) => {
+  // @TmsLink AT_SEARCH_001
+  test('AT_SEARCH_001: Verify button search', async ({ authPage: page }) => {
     const searchPage = new SearchPage(page);
 
     await test.step('1. Verify search button visible', async () => {
@@ -73,8 +73,8 @@ test.describe('@search Search Product Test', () => {
     });
   }
 
-  // @TmsLink TC_SEARCH_009
-  test('TC_SEARCH_009: Verify display of search result in grid format', async ({ authPage: page }) => {
+  // @TmsLink AT_SEARCH_009
+  test('AT_SEARCH_009: Verify display of search result in grid format', async ({ authPage: page }) => {
     const searchPage = new SearchPage(page);
 
     await test.step('1. Search with valid keyword', async () => {
@@ -119,8 +119,8 @@ test.describe('@search Search Product Test', () => {
     });
   }
 
-  // @TmsLink TC_SEARCH_011
-  test('TC_SEARCH_011: Verify clear search button', async ({ authPage: page }) => {
+  // @TmsLink AT_SEARCH_011
+  test('AT_SEARCH_011: Verify clear search button', async ({ authPage: page }) => {
     const searchPage = new SearchPage(page);
 
     await test.step('1. Enter search keyword', async () => {
@@ -136,8 +136,8 @@ test.describe('@search Search Product Test', () => {
     });
   });
 
-  // @TmsLink TC_SEARCH_012
-  test('TC_SEARCH_012: Verify suggestion list with 1 character', async ({ authPage: page }) => {
+  // @TmsLink AT_SEARCH_012
+  test('AT_SEARCH_012: Verify suggestion list with 1 character', async ({ authPage: page }) => {
     const searchPage = new SearchPage(page);
 
     await test.step('1. Enter 1 character', async () => {
@@ -153,8 +153,8 @@ test.describe('@search Search Product Test', () => {
     });
   });
 
-  // @TmsLink TC_SEARCH_013
-  test('TC_SEARCH_013: Verify closing search popup using Esc key', async ({ authPage: page }) => {
+  // @TmsLink AT_SEARCH_013
+  test('AT_SEARCH_013: Verify closing search popup using Esc key', async ({ authPage: page }) => {
     const searchPage = new SearchPage(page);
 
     await test.step('1. Enter search keyword', async () => {
