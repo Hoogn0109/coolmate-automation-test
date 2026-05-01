@@ -260,15 +260,23 @@ export class SearchPage {
   async clickSeeMoreButton() {
     const initialCount = await this.productItems.count();
 
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
       await this.btnSeeMore.waitFor({ state: 'visible', timeout: 15000 });
-      await this.btnSeeMore.scrollIntoViewIfNeeded();
-      await this.btnSeeMore.click({ force: true });
+      await this.btnSeeMore.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'center' }));
+      await this.page.waitForTimeout(300);
+      await this.btnSeeMore.click().catch(() => this.btnSeeMore.click({ force: true }));
 
-      const hasLoadedMore = await expect.poll(async () => this.productItems.count(), {
+      const waitForMoreProducts = () => expect.poll(async () => this.productItems.count(), {
         timeout: timeDelay.shortDelay,
         intervals: [500, 1000, 2000],
-      }).toBeGreaterThan(initialCount).then(() => true).catch(() => false);
+      }).toBeGreaterThan(initialCount);
+
+      if (attempt === 3) {
+        await waitForMoreProducts();
+        return;
+      }
+
+      const hasLoadedMore = await waitForMoreProducts().then(() => true).catch(() => false);
 
       if (hasLoadedMore) return;
     }
