@@ -258,9 +258,20 @@ export class SearchPage {
   }
 
   async clickSeeMoreButton() {
-    await this.btnSeeMore.waitFor({ state: 'visible', timeout: 15000 });
-    await this.btnSeeMore.click();
-    await this.page.waitForTimeout(2000);
+    const initialCount = await this.productItems.count();
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await this.btnSeeMore.waitFor({ state: 'visible', timeout: 15000 });
+      await this.btnSeeMore.scrollIntoViewIfNeeded();
+      await this.btnSeeMore.click({ force: true });
+
+      const hasLoadedMore = await expect.poll(async () => this.productItems.count(), {
+        timeout: timeDelay.shortDelay,
+        intervals: [500, 1000, 2000],
+      }).toBeGreaterThan(initialCount).then(() => true).catch(() => false);
+
+      if (hasLoadedMore) return;
+    }
   }
 
   async clickContributeButton() {
