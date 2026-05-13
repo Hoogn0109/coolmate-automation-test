@@ -19,7 +19,7 @@ const credentials = {
     passwordLessThan6Chars: '12345',
     invalidEmailOrPassword: '[EMAIL_ADDRESS]',
     invalidEmail: 'nguyenhongmdmedia20@gmail.com',
-    invalidPhone: '12345678901',
+    invalidPhone: '12345676799999',
     invalidEmailWithSpace: 'nguyenhongmdmedia 19@gmail.com',
     trimEmail: '          ',
     trimPassword: '      ',
