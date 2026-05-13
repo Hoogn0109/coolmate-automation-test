@@ -308,36 +308,99 @@ export class CheckoutPage {
   async removeProduct(index: number = 0) {
     const btn = this.removeProductBtn.nth(index);
     await btn.waitFor({ state: "visible", timeout: 5_000 });
+
+    const countBefore = await this.getCartItemCount();
+
+    // Kick off the request listener BEFORE clicking so we don't miss the response.
+    const cartMutationPromise = this.page
+      .waitForResponse(
+        (res) =>
+          /\/cart|\/api\/cart/i.test(res.url()) &&
+          ['DELETE', 'POST', 'PUT', 'PATCH'].includes(res.request().method()),
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+
     await btn.click();
-    try {
-      const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
-      if (await confirmBtn.isVisible({ timeout: 1500 })) await confirmBtn.click();
-    } catch { }
-    await this.page.waitForTimeout(1_500);
+
+    // Confirmation dialog may take a few seconds to render on slower networks.
+    const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
+    await confirmBtn
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => confirmBtn.click({ force: true }))
+      .catch(() => { });
+
+    // Wait for the dialog to disappear so it doesn't block the next click.
+    await confirmBtn.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => { });
+
+    await cartMutationPromise;
+
+    // Wait until the UI reflects the mutation (item count actually decreased).
+    await expect
+      .poll(() => this.getCartItemCount(), {
+        timeout: 10_000,
+        intervals: [300, 500, 1_000, 1_500],
+        message: 'Cart item count should decrease after removing a product',
+      })
+      .toBeLessThan(countBefore);
   }
 
   async removeAllProducts() {
     await this.dismissCoolClubPopup();
-    const isVisible = await this.removeAllBtn.isVisible().catch(() => false);
-    if (isVisible) {
-      await this.removeAllBtn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
-      await this.removeAllBtn.click({ timeout: 5_000 }).catch(async () => {
-        await this.dismissCoolClubPopup();
-        await this.removeAllBtn.click({ force: true, timeout: 5_000 });
-      });
-      try {
-        const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
-        if (await confirmBtn.isVisible({ timeout: 1500 })) await confirmBtn.click();
-      } catch { }
-      await this.page.waitForTimeout(2_000);
-      await this.page.waitForLoadState("domcontentloaded").catch(() => { });
-    } else {
-      let count = await this.getCartItemCount();
-      while (count > 0) {
-        await this.removeProduct(0);
-        count = await this.getCartItemCount();
-      }
+
+  
+    const removeAllVisible = await this.removeAllBtn.isVisible().catch(() => false);
+    if (removeAllVisible) {
+      await this.tryClickRemoveAllWithConfirm();
     }
+
+    const MAX_PASSES = 20;
+    for (let pass = 0; pass < MAX_PASSES; pass += 1) {
+      const count = await this.getCartItemCount();
+      if (count === 0) break;
+      await this.removeProduct(0);
+    }
+
+    await this.page.waitForLoadState("domcontentloaded").catch(() => { });
+
+    await expect
+      .poll(() => this.getCartItemCount(), {
+        timeout: 15_000,
+        intervals: [500, 1_000, 2_000, 2_000],
+        message: 'Cart should be empty after "Remove all"',
+      })
+      .toBe(0);
+  }
+
+  private async tryClickRemoveAllWithConfirm(): Promise<void> {
+    await this.removeAllBtn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+
+    const cartMutationPromise = this.page
+      .waitForResponse(
+        (res) =>
+          /\/cart|\/api\/cart/i.test(res.url()) &&
+          ['DELETE', 'POST', 'PUT', 'PATCH'].includes(res.request().method()),
+        { timeout: 15_000 },
+      )
+      .catch(() => null);
+
+    await this.removeAllBtn.click({ timeout: 5_000 }).catch(async () => {
+      await this.dismissCoolClubPopup();
+      await this.removeAllBtn.click({ force: true, timeout: 5_000 }).catch(() => { });
+    });
+
+    // Confirmation dialogs on Coolmate can take a couple of seconds to render,
+    // so poll instead of using a single short timeout.
+    const confirmBtn = CHECKOUT_LOCATOR.confirmRemoveButton(this.page);
+    await confirmBtn
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => confirmBtn.click({ force: true }))
+      .catch(() => { });
+
+    // Ensure the dialog is fully dismissed before the caller continues.
+    await confirmBtn.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => { });
+
+    await cartMutationPromise;
   }
 
   async expectEmptyCart() {

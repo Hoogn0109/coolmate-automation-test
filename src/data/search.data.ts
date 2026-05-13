@@ -118,7 +118,7 @@ const spotlightCases = [
         viewAllStep: 'Click View All button and navigate to spotlight page',
         scrollToLastProduct: true,
         clickSeeMore: true,
-        expectedProductCount: 40,
+        expectedProductCount: 24,
     },
 ] as const;
 

@@ -1,7 +1,7 @@
 export const PRODUCT_DETAIL_LOCATORS = {
 
     // Basic product info
-    itemName: "(//img[@alt='Áo in C&S Em ước mơ - Trạm phóng tương lai S2'])[1]",
+    itemName: "(//img[@alt='Áo in C&S Em ước mơ - Trạm phóng tương lai S2 - Trắng'])[2]",
     addCartButton: "(//button[@id='product-detail-add-cart'])[1]",
     productTitle: "(//h1[contains(text(),'Áo in C&S Em ước mơ - Trạm phóng tương lai S2')])[1]",
     salePrice: 'xpath=(//h1/following-sibling::div//span[contains(text(), "đ") and contains(@class, "text-2xl")] | //h1/following-sibling::div//p[contains(text(), "đ") and contains(@class, "text-[28px]")])[1]',

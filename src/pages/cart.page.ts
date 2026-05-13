@@ -1,6 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { CART_LOCATOR } from '../locator/cart.locator';
 import { SearchPage } from './search.page';
+import { CheckoutPage } from './checkout.page';
 import { searchData } from '../data/search.data';
 
 export class CartPage {
@@ -160,41 +161,127 @@ export class CartPage {
     await this.page.waitForTimeout(300);
   }
 
-  async selectDifferentSize() {
-    const allSizeBtns = this.page.locator(CART_LOCATOR.sizeButtons);
-    const count = await allSizeBtns.count();
+  /**
+   * Click a size button by its exact text label (e.g. "M", "L", "XL", "2XL").
+   * Returns true if the button was found and clicked successfully.
+   */
+  async selectSizeByText(size: string): Promise<boolean> {
+    const btns = await this.getSizeButtons();
+    for (const btn of btns) {
+      const text = ((await btn.textContent()) ?? '').trim();
+      if (text.toUpperCase() !== size.toUpperCase()) continue;
+
+      const isDisabled = await btn
+        .evaluate((el) => (el as HTMLButtonElement).disabled)
+        .catch(() => false);
+      const cls = (await btn.getAttribute('class')) ?? '';
+      const isVisuallyDisabled =
+        /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
+      if (isDisabled || isVisuallyDisabled) return false;
+
+      await btn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+      await btn.click({ force: true });
+      await this.page.waitForTimeout(500);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Return only the real size buttons (M, L, XL, S, 28, 29, 2XL, …),
+   * filtering out voucher/coupon buttons or any other interactive elements
+   * that live inside the #product-detail-variants container.
+   */
+  private async getSizeButtons(): Promise<Locator[]> {
+    const all = this.page.locator(CART_LOCATOR.sizeButtons);
+    const count = await all.count();
+    const result: Locator[] = [];
     for (let i = 0; i < count; i++) {
-      const btn = allSizeBtns.nth(i);
-      const cls = await btn.getAttribute('class') || '';
-      const isDisabled = await btn.evaluate((el) => (el as HTMLButtonElement).disabled).catch(() => false);
-      const isVisuallyDisabled = /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
-      const isSelected = /bg-neutral-900|text-white|text-light|selected/.test(cls);
-      if (!isDisabled && !isVisuallyDisabled && !isSelected && cls.includes('bg-neutral-100')) {
-        await btn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
-        await btn.click({ force: true });
-        return;
+      const btn = all.nth(i);
+      const text = ((await btn.textContent()) ?? '').trim();
+      // Size labels are short tokens like "S", "M", "L", "XL", "2XL", "28", "29"…
+      if (/^(?:[0-9]{1,3}|[0-9]?X*[SMLX]L?|FREESIZE)$/i.test(text)) {
+        result.push(btn);
       }
     }
+    return result;
+  }
+
+  /**
+   * Read the size text currently selected on PDP (best-effort).
+   * Returns null if no size appears selected.
+   */
+  async getSelectedSizeText(): Promise<string | null> {
+    const btns = await this.getSizeButtons();
+    for (const btn of btns) {
+      const cls = (await btn.getAttribute('class')) ?? '';
+      const ariaSelected = await btn.getAttribute('aria-selected').catch(() => null);
+      if (cls.includes('bg-neutral-900') || ariaSelected === 'true') {
+        const text = ((await btn.textContent()) ?? '').trim();
+        if (text) return text;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Pick a size different from the currently selected one and verify the
+   * selection actually switched. Returns the newly selected size text, or
+   * null if no alternative size could be selected.
+   */
+  async selectDifferentSize(): Promise<string | null> {
+    const previousSize = await this.getSelectedSizeText();
+    const btns = await this.getSizeButtons();
+
+    for (const btn of btns) {
+      const text = ((await btn.textContent()) ?? '').trim();
+      if (!text || text === previousSize) continue;
+
+      const cls = (await btn.getAttribute('class')) ?? '';
+      const isDisabled = await btn
+        .evaluate((el) => (el as HTMLButtonElement).disabled)
+        .catch(() => false);
+      const isVisuallyDisabled =
+        /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
+      if (isDisabled || isVisuallyDisabled) continue;
+
+      await btn.scrollIntoViewIfNeeded({ timeout: 5_000 }).catch(() => { });
+      await btn.click({ force: true });
+      await this.page.waitForTimeout(500);
+
+      const newSelected = await this.getSelectedSizeText();
+      if (newSelected && newSelected !== previousSize) {
+        return newSelected;
+      }
+    }
+    return null;
   }
 
   async selectSizeIfNeeded() {
-    const btns = this.page.locator(CART_LOCATOR.sizeButtons);
-    await btns.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => { });
+    const btns = await this.getSizeButtons();
+    if (btns.length === 0) return;
 
-    const count = await btns.count();
-    if (count > 0) {
-      for (let i = 0; i < count; i++) {
-        const btn = btns.nth(i);
-        const isDisabled = await btn.evaluate((el) => (el as HTMLButtonElement).disabled).catch(() => false);
-        const cls = await btn.getAttribute('class') || '';
-        const isVisuallyDisabled = /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
-        if (!isDisabled && !isVisuallyDisabled) {
-          if (!cls.includes('bg-neutral-900')) {
-            await btn.click({ force: true });
-            await this.page.waitForTimeout(500);
-          }
-          return;
-        }
+    // If any size is already selected, leave it as-is — the caller's previous
+    // selectDifferentSize() / user choice must be preserved.
+    for (const btn of btns) {
+      const cls = (await btn.getAttribute('class')) ?? '';
+      if (cls.includes('bg-neutral-900')) {
+        return;
+      }
+    }
+
+    // Otherwise, pick the first enabled size so that Add-to-cart is actionable.
+    for (const btn of btns) {
+      const isDisabled = await btn
+        .evaluate((el) => (el as HTMLButtonElement).disabled)
+        .catch(() => false);
+      const cls = (await btn.getAttribute('class')) ?? '';
+      const isVisuallyDisabled =
+        /pointer-events-none|cursor-not-allowed|opacity|line-through|text-neutral-300/.test(cls);
+      if (!isDisabled && !isVisuallyDisabled) {
+        await btn.click({ force: true });
+        await this.page.waitForTimeout(500);
+        return;
       }
     }
   }
@@ -544,5 +631,27 @@ export class CartPage {
 
   async moveMouseAwayFromCards() {
     await this.page.mouse.move(0, 0);
+  }
+
+  /**
+   * Open cart page and verify the number of distinct line items.
+   * Used to distinguish between "merge same SKU" vs "split different variants" behavior.
+   */
+  async openCartAndExpectLineItemCount(
+    expectedCount: number,
+    message?: string,
+  ): Promise<void> {
+    await this.clickViewCart();
+    await this.expectCartUrl();
+
+    const checkoutPage = new CheckoutPage(this.page);
+    await checkoutPage.dismissCoolClubPopup();
+    await checkoutPage.expectCartProductsVisible();
+
+    const lineItemCount = await checkoutPage.getCartItemCount();
+    expect(
+      lineItemCount,
+      message ?? `Cart should contain exactly ${expectedCount} line item(s)`,
+    ).toBe(expectedCount);
   }
 }

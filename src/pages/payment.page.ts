@@ -77,7 +77,24 @@ export class PaymentPage {
   static async clearExistingCart(page: Page): Promise<void> {
     const checkout = new CheckoutPage(page);
     await checkout.openCart();
+
+    // If the cart is already empty there's nothing to do.
+    const existing = await checkout.getCartItemCount();
+    if (existing === 0) {
+      return;
+    }
+
     await checkout.removeAllProducts();
+
+    // Double-check before the caller navigates away so the DELETE cannot be
+    // cancelled by a subsequent page.goto.
+    await expect
+      .poll(() => checkout.getCartItemCount(), {
+        timeout: 15_000,
+        intervals: [500, 1_000, 2_000],
+        message: 'Cart must be empty before starting a fresh payment flow',
+      })
+      .toBe(0);
   }
 
   static async ensureCheckoutReadyForOrder(checkout: CheckoutPage): Promise<void> {

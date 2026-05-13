@@ -44,14 +44,21 @@ test.describe(' @cart @public AT_CART_XX – Add to Cart Scenarios', () => {
       await cartPage.dismissToast();
     });
 
-    await test.step('3. Click "Thêm vào giỏ" second time', async () => {
+    await test.step('3. Click "Thêm vào giỏ" second time (same color + size)', async () => {
       await cartPage.clickAddToCart();
       await cartPage.expectSuccessToastVisible();
       await cartPage.dismissToast();
     });
 
-    await test.step('4. Verify: Cart count increased by 2 from initial', async ({ }) => {
+    await test.step('4. Verify: Cart count increased by 2 from initial', async () => {
       await cartPage.expectCartCountToBe(countBefore + 2, "Quantity in cart must increase by 2 after 2 add operations");
+    });
+
+    await test.step('5. Open cart page and verify product is merged into a single line item', async () => {
+      await cartPage.openCartAndExpectLineItemCount(
+        1,
+        'Same SKU added twice must be merged into exactly 1 line item (quantity = 2 on that line)',
+      );
     });
   });
 
@@ -71,18 +78,26 @@ test.describe(' @cart @public AT_CART_XX – Add to Cart Scenarios', () => {
       await cartPage.dismissToast();
     });
 
-    await test.step('3. Select a different size', async () => {
-      await cartPage.selectDifferentSize();
+    await test.step('3. Switch to size M', async () => {
+      const switched = await cartPage.selectSizeByText('M');
+      expect(switched, 'Size M must be available on the PDP').toBeTruthy();
     });
 
-    await test.step('4. Click "Thêm vào giỏ" with new size', async () => {
+    await test.step('4. Click "Thêm vào giỏ" with size M', async () => {
       await cartPage.clickAddToCart();
       await cartPage.expectSuccessToastVisible();
       await cartPage.dismissToast();
     });
 
-    await test.step('5. Verify: Cart creates a new line item for different size', async () => {
+    await test.step('5. Verify: Cart total quantity increased by 2', async () => {
       await cartPage.expectCartCountToBe(countBefore + 2, "The total quantity of the cart must be reported as 2 because a different size item was just added");
+    });
+
+    await test.step('6. Open cart page and verify two separate line items are created', async () => {
+      await cartPage.openCartAndExpectLineItemCount(
+        2,
+        'Different size must create 2 separate line items instead of merging into 1',
+      );
     });
   });
 

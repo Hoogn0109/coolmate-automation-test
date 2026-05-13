@@ -5,7 +5,6 @@ import { productData } from '../data/product.detail.data';
 import { searchData } from '../data/search.data';
 
 test.describe('@productDetail @public Product Detail Page Tests', () => {
-
     // @TmsLink TC_PDP_001
     test('TC_PDP_001: Verify navigation to product detail page from search', async ({ authPage: page }) => {
         const searchPage = new SearchPage(page);
@@ -13,6 +12,8 @@ test.describe('@productDetail @public Product Detail Page Tests', () => {
 
         await test.step('1. Search for name product using Enter', async () => {
             await searchPage.searchUsingEnter(searchData.nameProductSearch);
+            await searchPage.clickViewAll();
+
         });
         await test.step('2. Navigate to product detail page', async () => {
             await productDetailPage.NavigateToProductDetail();
